@@ -1,0 +1,156 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'mercenary'
+require 'date'
+
+require "pwss"
+require "pwss/version"
+require "pwss/cipher"
+require "pwss/entry"
+require "pwss/fileops"
+
+Mercenary.program(:pwss) do |p|
+  DEFAULT_FILENAME = File.join(Dir.home, ".pwss.yaml.enc")
+
+  p.version Pwss::VERSION
+  p.description <<EOS
+PWSS is a password safe, in the spirit of pws
+
+Features:
+
+* Multiple entries can be stored in a single file
+* Entries are "complex" records, including title, username, password, url, description
+* Support for multiple password files
+* The password file can be stored encrypted or not
+* The password file is human-readable and editable (when not encrypted)
+* Decrypt and encrypt commands allow one to operate directly on the password file
+EOS
+
+  p.syntax "pwss [global option] <subcommand> [options] args"
+
+  p.option 'filename', '--filename FILE', '-f FILE', 'File with safe'
+
+  p.command(:init) do |c|
+    c.syntax "init"
+    c.description "Init a new password safe"
+      
+    c.action do |args, opts|
+      filename = opts['filename']  || DEFAULT_FILENAME
+
+      empty_safe = "# safe created on #{Date.today}\n"
+
+      # check status of input file and encrypt if necessary
+      if FileOps::encrypted? filename then
+        password = Cipher::check_password
+        new_string = Cipher::encrypt empty_safe, password
+      else
+        new_string = empty_safe
+      end
+
+      FileOps::backup(filename) if File.exists?(filename)
+      FileOps::save filename, new_string
+
+      puts "New safe created in #{filename}"
+    end
+  end
+
+
+  p.command(:get) do |c|
+    c.syntax "get string"
+    c.description "Get first entry matching string"
+      
+    c.option 'interactive', '--interactive', '-i', 'Wait for user input to clean password.'
+
+    c.action do |args, opts|
+      filename = opts['filename']  || DEFAULT_FILENAME
+      interactive = opts['interactive']
+      string, password = file2string filename
+      Pwss::get args.join(" "), string, interactive
+    end
+  end
+
+  p.command(:add) do |c|
+    c.syntax "add an entry"
+    c.description "Add an entry to the file"
+      
+    c.action do |args, opts|
+      filename = opts['filename'] || DEFAULT_FILENAME
+      string, password = file2string filename
+
+      # ask for a new entry
+      pe = Pwss::Entry.new
+      pe.ask
+
+      yaml = YAML::load(string)
+      entries = yaml != false ? yaml : Array.new
+      entries << pe.entry
+
+      # check status of input file and encrypt if necessary
+      if FileOps::encrypted? filename then
+        new_string = Cipher::encrypt entries.to_yaml, password
+      else
+        new_string = entries.to_yaml
+      end
+
+      FileOps::backup filename
+      FileOps::save filename, new_string
+    end
+  end
+  
+  #
+  # Operations on the master file
+  #
+
+  p.command(:encrypt) do |c|
+    c.syntax "encrypt"
+    c.description "Encrypt file"
+      
+    c.action do |_, opts|
+      filename = opts['filename'] || DEFAULT_FILENAME.sub(/\.enc$/, "")
+
+      password = Cipher::check_password
+      data = FileOps::load filename
+      encrypted = Cipher::encrypt data, password
+
+      enc_filename = filename + ".enc"
+      FileOps::save enc_filename, encrypted
+      puts "An encrypted copy now lives in #{enc_filename}"
+    end
+  end
+
+  p.command(:decrypt) do |c|
+    c.syntax "decrypt"
+    c.description "Decrypt file"
+      
+    c.action do |_, opts|
+      filename = opts['filename'] || DEFAULT_FILENAME
+
+      password = Cipher::ask_password
+      data = FileOps::load filename
+      decrypted = Cipher::decrypt data, password
+
+      dec_filename = filename.sub(/\.enc$/,"")
+      FileOps::save dec_filename, decrypted
+      puts "A decrypted copy now lives in #{dec_filename}"
+    end
+  end
+
+  p.command(:help) do |c|
+    c.action do |_,_|
+      puts p.to_s
+    end
+  end
+
+  p.default_command(:help)
+
+  # load filename and decrypt, if necessary
+  def file2string filename
+    string = FileOps::load filename
+    if FileOps::encrypted? filename then
+      password = Cipher::ask_password
+      string = Cipher::decrypt string, password
+    end
+    [string, password]
+  end
+end

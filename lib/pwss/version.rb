@@ -1,0 +1,3 @@
+module Pwss
+  VERSION = "0.0.1"
+end

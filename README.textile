@@ -1,0 +1,135 @@
+h1. Pwss
+
+A password manager in the spirit of "pws":https://github.com/janlelis/pws.
+
+Features:
+
+* Multiple entries can be stored in a single file
+* Entries are "complex" records, including title, username, password, url, description
+* Support for multiple password files
+* The password file can be stored encrypted or not
+* The password file is human-readable and editable (when not encrypted)
+* Decrypt and encrypt commands allow one to operate directly on the password file
+
+h2. Installation
+
+Add this line to your application's Gemfile:
+
+    gem 'pwss'
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install pwss
+
+h2. Usage
+
+*Getting started.* @pwss@ stores passwords in YAML files (also called "password safe" in the following), possibly encrypted.
+
+A typical usage scenario is the following:
+
+# @pwss init@ will create a new encrypted password safe in @~/.pwss.yaml.enc@
+# @pwss add@ will add a new entry to the file
+# @pwss get entry@ will retrieve all entries whose *title* contains @entry@
+
+*Using multiple safes.* If you want to create your password safe in a different location, use the @-f@ (@--filename@) option:
+
+# @pwss -f MYFILE init@
+# @pwss -f MYFILE add@
+# @pwss -f MYFILE get@
+
+*Encrypted and Plain Files.* @pwss@ works equally well with encrypted and plain files.  More in detailes, the file extension determines whether @pwss@ tries to decrypt/encrypt the file or not.  Use @.enc@ to store password safes encrypted; any other extension will leave the file in plain format.
+
+For instance:
+
+<pre>
+  $ pwss -f a.yaml.enc init 
+</pre>
+
+will store the password in to encrypted file @a.yaml.enc@.
+
+By contrast,
+
+<pre>
+  $ pwss -f a.yaml get entry
+</pre>
+
+will try to retrieve @entry@ from file @a.yaml@, which is not encrypted.
+
+Encrypting important passwords is a good idea.  However, if you use @pwss@ to store non-critical infomation, prefer to edit the password safe with a text editor, or use another application for managing encryption and decryption, using @pwss@ with the file in plain format might be more convenient.
+
+*Moving from plain to encrypted.* Use the @encrypt@ and @decrypt@ commands at any time to move from the plain to the encrypted format.
+
+<pre>
+  $ pwss -f YOURFILE encrypt 
+</pre>
+
+will encrypt @YOURFILE@ while @decrypt@ will perform the opposite operation.
+
+*Starting from an Existing File.*  You can also start from an existing file, as long as it is an array of YAML records, each containing, at least, a @title@ and a @password@ field.  (See next section, for the file structure.)
+
+In this scenario, you can use the following commands to get started:
+
+# @pwss -f YOURFILE encrypt@ will encrypt your existing password file
+# @mv YOURFILE.enc ~/.pwss.yaml.enc@ moves the encrypted file to the default location (not necessary, but it simplifies the workflow)
+
+To add entries to the password safe, use the @add@ command.  If you prefer to operate on the file using a text editor, you can also use the @decrypt@ and @encrypt@ commands.
+
+*Getting Help.*
+
+<pre>
+  $ pwss
+</pre>
+
+will show all command options.
+
+h2. Under the Hood
+
+@pwss@ adopts a human-readable format for storing passwords, when the file is not encrypted, of course! (Unless you have mathematical super-powers and can read encrypted text.)
+
+The password files is a YAML file containing an array of entries.  By default, entries have the following records:
+
+* title
+* username
+* password
+* url
+* description
+
+Example
+
+<pre>
+- title: A webservice
+  username: username@example.com
+  password: 1234567890
+  url: http://www.example.com
+  description: >
+    with a password like the one above, who needs a password safe
+
+- title: My email
+  username: username@example.com
+  password: 1234567890
+  url: http://www.example.com
+  description: >
+    Also available via email client, with the following connection parameters
+    smtp.example.com
+    imap.example.com
+</pre>
+
+Notice that only @title@ and @password@ are required.
+
+h2. License and Additional Disclaimer
+
+Licensed under the terms of the MIT License.
+
+*Make sure you backup your important data and do not rely solely on @pwss@ to store your critical data.*
+
+h2. Contributing
+
+1. Fork it ( http://github.com/<my-github-username>/pwss/fork )
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
