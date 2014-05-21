@@ -55,6 +55,16 @@ EOS
     end
   end
 
+  p.command(:list) do |c|
+    c.syntax "list all entries"
+    c.description "List all entries"
+      
+    c.action do |args, opts|
+      filename = opts['filename']  || DEFAULT_FILENAME
+      string, password = file2string filename
+      Pwss::list string
+    end
+  end
 
   p.command(:get) do |c|
     c.syntax "get string"
@@ -116,6 +126,7 @@ EOS
       enc_filename = filename + ".enc"
       FileOps::save enc_filename, encrypted
       puts "An encrypted copy now lives in #{enc_filename}"
+      puts "You might want to check everything is ok and delete the plain file: #{filename}"
     end
   end
 
@@ -145,6 +156,7 @@ EOS
   p.default_command(:help)
 
   # load filename and decrypt, if necessary
+  # return the filename as string and the password (in case you need to save)
   def file2string filename
     string = FileOps::load filename
     if FileOps::encrypted? filename then

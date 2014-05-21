@@ -47,4 +47,13 @@ module Pwss
     system("echo ahahahahaha | pbcopy")
 
   end
+
+  def self.list string
+    entries = YAML::load(string)
+    entries.each do |element|
+      # to stdout, removing password
+      element.delete("password")
+      puts element.to_yaml
+    end
+  end
 end
