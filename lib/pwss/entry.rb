@@ -1,9 +1,14 @@
 module Pwss
+  #
+  # Entry manages an entry in the password safe
+  # It is a wrapper to a Hash
+  #
   class Entry
     INPUT_F=0
     DEFAULT=1
     PROMPT=2
 
+    # the fields of an entry, together with the function to ask the, default value, and prompt
     FIELDS = {
       "title"       => ["gets.chomp", "'title'", "title: "], 
       "username"    => ["gets.chomp", "''", "username: "],

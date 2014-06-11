@@ -2,6 +2,7 @@ require 'fileutils'
 
 #
 # From file to string and back
+# There is no lower level than this
 #
 module FileOps
   # load a file into a string

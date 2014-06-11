@@ -2,7 +2,8 @@ require 'encryptor'
  
 #
 # Cipher does encryption and decryption of data
-# 
+# It reasons at the string level (both in input and in output)
+#
 module Cipher
   def self.encrypt string, password
     Encryptor.encrypt(:value => string, :key => password)
