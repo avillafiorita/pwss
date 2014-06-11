@@ -19,21 +19,20 @@ PWSS is a password safe, in the spirit of pws
 
 Features:
 
-* Multiple entries can be stored in a single file
-* Entries are "complex" records, including title, username, password, url, description
-* Support for multiple password files
-* The password file can be stored encrypted or not
-* The password file is human-readable and editable (when not encrypted)
-* Decrypt and encrypt commands allow one to operate directly on the password file
+* Each entry stores: title, username, password, url, description
+* Many entries per file (or 'safe')
+* Management of different safes
+* Decrypt and encrypt commands to operate directly on safes
+* Safes are human-readable and editable (when not encrypted)
+* Safes can be stored encrypted or not
 EOS
 
   p.syntax "pwss [global option] <subcommand> [options] args"
-
-  p.option 'filename', '--filename FILE', '-f FILE', 'File with safe'
+  p.option 'filename', '--filename FILE', '-f FILE', 'Password file'
 
   p.command(:init) do |c|
     c.syntax "init"
-    c.description "Init a new password safe"
+    c.description "Init a new password file"
       
     c.action do |args, opts|
       filename = opts['filename']  || DEFAULT_FILENAME
@@ -57,32 +56,37 @@ EOS
 
   p.command(:list) do |c|
     c.syntax "list all entries"
-    c.description "List all entries"
+    c.description "List all entries in a safe"
       
     c.action do |args, opts|
       filename = opts['filename']  || DEFAULT_FILENAME
-      string, password = file2string filename
-      Pwss::list string
+
+      string, _ = file2string filename
+      entries = YAML::load(string) || Array.new
+
+      Pwss::list entries
     end
   end
 
   p.command(:get) do |c|
     c.syntax "get string"
-    c.description "Get first entry matching string"
-      
+    c.description "Get first entry matching string in title"
     c.option 'interactive', '--interactive', '-i', 'Wait for user input to clean password.'
 
     c.action do |args, opts|
       filename = opts['filename']  || DEFAULT_FILENAME
       interactive = opts['interactive']
-      string, password = file2string filename
-      Pwss::get args.join(" "), string, interactive
+
+      string, _ = file2string filename
+      entries = YAML::load(string) || Array.new
+
+      Pwss::get args.join(" "), entries, interactive
     end
   end
 
   p.command(:add) do |c|
     c.syntax "add an entry"
-    c.description "Add an entry to the file"
+    c.description "Add an entry to a password safe"
       
     c.action do |args, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
@@ -92,8 +96,8 @@ EOS
       pe = Pwss::Entry.new
       pe.ask
 
-      yaml = YAML::load(string)
-      entries = yaml != false ? yaml : Array.new
+      # add the entry to the safe
+      entries = YAML::load(string) || Array.new
       entries << pe.entry
 
       # check status of input file and encrypt if necessary
@@ -107,14 +111,64 @@ EOS
       FileOps::save filename, new_string
     end
   end
+
+  p.command(:update) do |c|
+    c.syntax "update the password for an entry"
+    c.description "Update the password for an entry"
+
+    c.action do |args, opts|
+      filename = opts['filename'] || DEFAULT_FILENAME
+      string, password = file2string filename
+
+      # load entries and update 
+      entries = YAML::load(string) || Array.new
+      entries = Pwss::update args.join(" "), entries
+
+      # check status of input file and encrypt if necessary
+      if FileOps::encrypted? filename then
+        new_string = Cipher::encrypt entries.to_yaml, password
+      else
+        new_string = entries.to_yaml
+      end
+
+      FileOps::backup filename
+      FileOps::save filename, new_string
+    end
+  end    
+
+
+  p.command(:destroy) do |c|
+    c.syntax "delete an entry"
+    c.description "Permenently delete an entry from a safe"
+      
+    c.action do |args, opts|
+      filename = opts['filename'] || DEFAULT_FILENAME
+
+      string, password = file2string filename
+      entries = YAML::load(string)
+
+      entries = Pwss::destroy args.join(" "), entries
+      
+      # check status of input file and encrypt if necessary
+      if FileOps::encrypted? filename then
+        new_string = Cipher::encrypt entries.to_yaml, password
+      else
+        new_string = entries.to_yaml
+      end
+
+      FileOps::backup filename
+      FileOps::save filename, new_string
+    end
+  end
   
+
   #
   # Operations on the master file
   #
 
   p.command(:encrypt) do |c|
     c.syntax "encrypt"
-    c.description "Encrypt file"
+    c.description "Encrypt a password safe"
       
     c.action do |_, opts|
       filename = opts['filename'] || DEFAULT_FILENAME.sub(/\.enc$/, "")
@@ -132,7 +186,7 @@ EOS
 
   p.command(:decrypt) do |c|
     c.syntax "decrypt"
-    c.description "Decrypt file"
+    c.description "Decrypt a password safe"
       
     c.action do |_, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
