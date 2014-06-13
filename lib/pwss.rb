@@ -12,8 +12,10 @@ module Pwss
   def self.get search_string, entries, interactive
     id = choose_entry search_string, entries
 
-    puts "Selected entry:\n"
-    print_entry id, entries[id]
+    # it causes confusion ... here id is the absolute id
+    # (the one printed by choose_entry is the relative match)
+    # puts "Selected entry:\n"
+    # print_entry id, entries[id]
 
     #
     # make the password available and then forget it
