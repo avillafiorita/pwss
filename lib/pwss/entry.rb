@@ -1,3 +1,5 @@
+require 'readline'
+
 module Pwss
   #
   # Entry manages an entry in the password safe
@@ -8,14 +10,14 @@ module Pwss
     DEFAULT=1
     PROMPT=2
 
-    # the fields of an entry, together with the function to ask the, default value, and prompt
+    # the fields of an entry, together with the function to ask the and default value
     FIELDS = {
-      "title"       => ["gets.chomp", "'title'", "title: "], 
-      "username"    => ["gets.chomp", "''", "username: "],
-      "password"    => ["Cipher.check_password('password for entry: ')", "''", ""],
-      "added"       => ["", "Date.today.to_s", ""],
-      "url"         => ["gets.chomp", "''", "url: "],
-      "description" => ["get_lines",   "''", "description (terminate with '.'):\n"]
+      "title"       => ["Readline.readline('title: ')", "'title'"],
+      "username"    => ["Readline.readline('username: ')", "''"],
+      "password"    => ["Cipher.check_password('password for entry: ')", "''"],
+      "added"       => ["", "Date.today.to_s"],
+      "url"         => ["Readline.readline('url: ')", "''"],
+      "description" => ["get_lines",   "''"]
     }
 
     # the values (a Hash) of this issue
@@ -28,7 +30,6 @@ module Pwss
     # interactively ask from command line all fields specified in FIELDS
     def ask
       FIELDS.keys.each do |key|
-        printf "#{FIELDS[key][PROMPT]}" if FIELDS[key][PROMPT] != ""
         @entry[key] = (eval FIELDS[key][INPUT_F]) || (eval FIELDS[key][DEFAULT])
       end
     end
@@ -44,8 +45,14 @@ module Pwss
 
     # read n-lines (terminated by a ".")
     def get_lines
-      $/ = "\n.\n"  
-      STDIN.gets.chomp("\n.\n")
+      puts "description (terminate with '.'):"
+      lines = []
+      line = ""
+      until line == "."
+        line = Readline.readline
+        lines << line
+      end
+      lines.join("\n")
     end
 
   end
