@@ -70,7 +70,7 @@ EOS
 
   p.command(:get) do |c|
     c.syntax "get string"
-    c.description "Get first entry matching string in title"
+    c.description "Get password for entry matching string in title"
     c.option 'interactive', '--interactive', '-i', 'Wait for user input to clean password.'
 
     c.action do |args, opts|

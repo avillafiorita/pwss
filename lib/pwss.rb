@@ -21,7 +21,7 @@ module Pwss
     # make the password available and then forget it
     #
     password = entries[id]["password"]
-    system("echo #{password} | pbcopy")
+    system("printf #{password} | pbcopy")
 
     if interactive
       puts "\nPassword available in clipboard: press any key when you are done."
