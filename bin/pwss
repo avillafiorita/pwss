@@ -20,11 +20,14 @@ PWSS is a password safe, in the spirit of pws
 Features:
 
 * Each entry stores: title, username, password, url, description
-* Many entries per file (or 'safe')
-* Management of different safes
-* Decrypt and encrypt commands to operate directly on safes
-* Safes are human-readable and editable (when not encrypted)
-* Safes can be stored encrypted or not
+* A file (or safe) can store many entries
+* The user can manage different files (safes)
+* CRUD (create, read, update, delete) commands are available to
+  operate on entries and safes
+* Safes can be encrypted (to improve security)
+* Encrypted safes can be decrypted (for instance to batch process
+  entries, to migrate to another tool, or to manually edit entries)
+* Entries are human readable and editable (when not encrypted)
 EOS
 
   p.syntax "pwss [global option] <subcommand> [options] args"
@@ -32,7 +35,7 @@ EOS
 
   p.command(:init) do |c|
     c.syntax "init"
-    c.description "Init a new password file"
+    c.description "Init a new password file (= password safe)"
       
     c.action do |args, opts|
       filename = opts['filename']  || DEFAULT_FILENAME

@@ -4,12 +4,15 @@ A password manager in the spirit of "pws":https://github.com/janlelis/pws.
 
 Features:
 
-* Multiple entries can be stored in a single file
-* Entries are "complex" records, including title, username, password, url, description
-* Support for multiple password files
-* The password file can be stored encrypted or not
-* The password file is human-readable and editable (when not encrypted)
-* Decrypt and encrypt commands allow one to operate directly on the password file
+* Each entry stores: title, username, password, url, description
+* A file (or safe) can store many entries
+* The user can manage different files (safes)
+* CRUD (create, read, update, delete) commands are available to
+  operate on entries and safes
+* Safes can be encrypted (to improve security)
+* Encrypted safes can be decrypted (for instance to batch process
+  entries, to migrate to another tool, or to manually edit entries)
+* Entries are human readable and editable (when not encrypted)
 
 h2. Installation
 
@@ -27,7 +30,7 @@ Or install it yourself as:
 
 h2. Usage
 
-*Getting started.* @pwss@ stores passwords in YAML files (also called "password safe" in the following), possibly encrypted.
+*Getting started.* @pwss@ stores passwords in a YAML file (also called "password safe" in the following), possibly encrypted.
 
 A typical usage scenario is the following:
 
@@ -35,13 +38,13 @@ A typical usage scenario is the following:
 # @pwss add@ will add a new entry to the file
 # @pwss get entry@ will retrieve all entries whose *title* contains @entry@
 
-*Using multiple safes.* If you want to create your password safe in a different location, use the @-f@ (@--filename@) option:
+*Using multiple safes.* If you want to create multiple password safes or store the password safe in a non-standard location, use the @-f@ (@--filename@) option:
 
 # @pwss -f MYFILE init@
 # @pwss -f MYFILE add@
 # @pwss -f MYFILE get@
 
-*Encrypted and Plain Files.* @pwss@ works equally well with encrypted and plain files.  More in detailes, the file extension determines whether @pwss@ tries to decrypt/encrypt the file or not.  Use @.enc@ to store password safes encrypted; any other extension will leave the file in plain format.
+*Encrypted and Plain Files.* @pwss@ works equally well with encrypted and plain files.  More in details, the file extension determines whether @pwss@ tries to decrypt/encrypt the file or not.  The @.enc@ extension tells @pwss@ that the file is encrypted; any other extension will tell @pwss@ to treat the file as plain text.
 
 For instance:
 
@@ -49,7 +52,7 @@ For instance:
   $ pwss -f a.yaml.enc init 
 </pre>
 
-will store the password in to encrypted file @a.yaml.enc@.
+will store the password in the *encrypted* file @a.yaml.enc@.
 
 By contrast,
 
@@ -57,9 +60,9 @@ By contrast,
   $ pwss -f a.yaml get entry
 </pre>
 
-will try to retrieve @entry@ from file @a.yaml@, which is not encrypted.
+will try to retrieve @entry@ from file @a.yaml@; the file is assumed to be in plain text by @pwss@ which will not ask for a master password, nor will try to decrypt it.
 
-Encrypting important passwords is a good idea.  However, if you use @pwss@ to store non-critical infomation, prefer to edit the password safe with a text editor, or use another application for managing encryption and decryption, using @pwss@ with the file in plain format might be more convenient.
+Encrypting important passwords is a good idea. (Just in case you were looking for a witty statement.)  However, if you use @pwss@ to store non-critical infomation, prefer to edit the password safe with a text editor, or use another application for managing encryption and decryption, using @pwss@ with the file in plain format might be more convenient.
 
 *Moving from plain to encrypted.* Use the @encrypt@ and @decrypt@ commands at any time to move from the plain to the encrypted format.
 
@@ -77,6 +80,8 @@ In this scenario, you can use the following commands to get started:
 # @mv YOURFILE.enc ~/.pwss.yaml.enc@ moves the encrypted file to the default location (not necessary, but it simplifies the workflow)
 
 To add entries to the password safe, use the @add@ command.  If you prefer to operate on the file using a text editor, you can also use the @decrypt@ and @encrypt@ commands.
+
+*Defining your entries.*  @pwss@ requires entries to have only a @title@ and a @password@ field.  If you want you can define and store your own records in the yaml files.
 
 *Getting Help.*
 
@@ -123,8 +128,6 @@ Notice that only @title@ and @password@ are required.
 h2. License and Additional Disclaimer
 
 Licensed under the terms of the MIT License.
-
-*Make sure you backup your important data and do not rely solely on @pwss@ to store your critical data.*
 
 h2. Contributing
 
