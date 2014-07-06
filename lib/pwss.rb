@@ -7,52 +7,35 @@ require 'yaml'
 
 module Pwss
 
-  WAITING_PERIOD=30 # seconds
-
-  def self.get search_string, entries, interactive
+  def self.get search_string, entries
     id = choose_entry search_string, entries
 
-    # it causes confusion ... here id is the absolute id
-    # (the one printed by choose_entry is the relative match)
-    # puts "Selected entry:\n"
-    # print_entry id, entries[id]
-
-    #
-    # make the password available and then forget it
-    #
-    password = entries[id]["password"]
-    system("printf #{password} | pbcopy")
-
-    if interactive
-      puts "\nPassword available in clipboard: press any key when you are done."
-      STDIN.getc
-    else
-      puts "\nPassword available in clipboard for #{WAITING_PERIOD} seconds."
-      sleep(WAITING_PERIOD)
-    end
-
-    system("echo ahahahahaha | pbcopy")
+    entries[id]["password"]
   end
 
 
-  def self.update search_string, entries
+  def self.update search_string, entries, length, alnum
     id = choose_entry search_string, entries
-    password = Cipher::check_password
+
+    password = Cipher.check_or_generate "new password for entry", length, alnum
+
     entries[id]["password"] = password
     entries[id]["updated_at"] = Date.today
-    entries
+
+    return entries, password
   end
     
 
   def self.destroy search_string, entries
     id = choose_entry search_string, entries
+
     entries.delete_at(id) if id != -1
     entries
   end
   
 
   def self.list entries
-    index = 0
+    index = 0 
     entries.each do |element|
       print_entry index, element
       index += 1

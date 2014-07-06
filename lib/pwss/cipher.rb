@@ -24,11 +24,11 @@ module Cipher
   end
 
   # Ask for a password twice and make sure it is entered the same
-  def self.check_password prompt="master password: "
+  def self.check_password prompt="master password"
     match = false
     while ! match
-      password = ask_password "Enter #{prompt}"
-      repeat = ask_password "Repeat #{prompt}"
+      password = ask_password "Enter #{prompt}: "
+      repeat = ask_password "Repeat #{prompt}: "
       match = (password == repeat)
 
       if match == false then
@@ -37,4 +37,38 @@ module Cipher
     end
     password
   end
+
+  # Ask for a password (twice) or generate one, if length is greater than 0
+  def self.check_or_generate prompt, length=0, alnum=false
+    length > 0 ? generate_password(length, alnum) : check_password(prompt)
+  end
+
+  #
+  # make the password available to the clipboard.
+  #
+  def self.password_to_clipboard password, counter = 30
+    system("printf \"%s\" \"#{password}\" | pbcopy")
+
+    if counter <= 0
+      puts "\nPassword available in clipboard: press enter when you are done."
+      STDIN.getc
+    else
+      puts "\nPassword available in clipboard for #{counter} seconds."
+      sleep(counter)
+    end
+
+    system("echo ahahahahaha | pbcopy")
+  end
+
+  private
+
+  # Generate a random password
+  # (Adapted from: http://randompasswordsgenerator.net/tutorials/ruby-random-password-generator.html)
+  def self.generate_password(length=8, alnum=false)  
+    chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ1234567890'  
+    chars += '!@#$%^&*()_+=[]{}<>/~,.;:|' if not alnum
+    Array.new(length) { chars[rand(chars.length)].chr }.join  
+  end
+
+
 end

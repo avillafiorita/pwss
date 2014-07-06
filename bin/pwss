@@ -32,6 +32,9 @@ EOS
 
   p.syntax "pwss [global option] <subcommand> [options] args"
   p.option 'filename', '--filename FILE', '-f FILE', 'Password file'
+  p.option "generate", "--generate LENGTH", "-g LENGTH", "automatically generate a password of length LENGTH"
+  p.option "alnum", "--alnum", "-a", "use only alphabetic and numeric characters"
+  p.option 'wait', '--wait SECONDS', '-w SECONDS', 'Number of seconds password is available in the clipboard (use 0 for interactive).'
 
   p.command(:init) do |c|
     c.syntax "init"
@@ -74,16 +77,16 @@ EOS
   p.command(:get) do |c|
     c.syntax "get string"
     c.description "Get password for entry matching string in title"
-    c.option 'interactive', '--interactive', '-i', 'Wait for user input to clean password.'
 
     c.action do |args, opts|
-      filename = opts['filename']  || DEFAULT_FILENAME
-      interactive = opts['interactive']
-
+      filename = opts['filename'] || DEFAULT_FILENAME
+      waiting = opts['wait'] ? opts['wait'].to_i : 30
+      
       string, _ = file2string filename
       entries = YAML::load(string) || Array.new
 
-      Pwss::get args.join(" "), entries, interactive
+      password = Pwss::get args.join(" "), entries
+      Cipher.password_to_clipboard password, waiting
     end
   end
 
@@ -93,11 +96,14 @@ EOS
       
     c.action do |args, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
+      waiting = opts['wait'] ? opts['wait'].to_i : 30
+      length = opts['generate'] ? opts['generate'].to_i : 0
+
       string, password = file2string filename
 
       # ask for a new entry
       pe = Pwss::Entry.new
-      pe.ask
+      pe.ask length, opts['alnum']
 
       # add the entry to the safe
       entries = YAML::load(string) || Array.new
@@ -112,20 +118,26 @@ EOS
 
       FileOps::backup filename
       FileOps::save filename, new_string
+
+      # make password available in the clipboard
+      Cipher.password_to_clipboard pe.entry["password"], waiting
     end
   end
 
   p.command(:update) do |c|
-    c.syntax "update the password for an entry"
-    c.description "Update the password for an entry"
+    c.syntax "update the password of an existing entry"
+    c.description "Update the password of an existing entry"
 
     c.action do |args, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
+      waiting = opts['wait'] ? opts['wait'].to_i : 30
+      length = opts['generate'] ? opts['generate'].to_i : 0
+
       string, password = file2string filename
 
       # load entries and update 
       entries = YAML::load(string) || Array.new
-      entries = Pwss::update args.join(" "), entries
+      entries, entry_password = Pwss::update args.join(" "), entries, length, opts["alnum"]
 
       # check status of input file and encrypt if necessary
       if FileOps::encrypted? filename then
@@ -136,6 +148,10 @@ EOS
 
       FileOps::backup filename
       FileOps::save filename, new_string
+
+      # copy to clipboard the new password
+      Cipher.password_to_clipboard entry_password, waiting
+
     end
   end    
 

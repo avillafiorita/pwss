@@ -14,7 +14,7 @@ module Pwss
     FIELDS = {
       "title"       => ["Readline.readline('title: ')", "'title'"],
       "username"    => ["Readline.readline('username: ')", "''"],
-      "password"    => ["Cipher.check_password('password for entry: ')", "''"],
+      "password"    => ["Cipher.check_or_generate('password for entry', length, alnum)", "''"],
       "created_at"  => ["", "Date.today"],
       "updated_at"  => ["", "nil"],
       "url"         => ["Readline.readline('url: ')", "''"],
@@ -29,7 +29,8 @@ module Pwss
     end
 
     # interactively ask from command line all fields specified in FIELDS
-    def ask
+    # arguments length and alnum are for password generation
+    def ask length, alnum
       FIELDS.keys.each do |key|
         @entry[key] = (eval FIELDS[key][INPUT_F]) || (eval FIELDS[key][DEFAULT])
       end
