@@ -119,6 +119,8 @@ EOS
       FileOps::backup filename
       FileOps::save filename, new_string
 
+      puts "Entry added."
+      
       # make password available in the clipboard
       Cipher.password_to_clipboard pe.entry["password"], waiting
     end
@@ -149,9 +151,10 @@ EOS
       FileOps::backup filename
       FileOps::save filename, new_string
 
+      puts "Entry updated."
+
       # copy to clipboard the new password
       Cipher.password_to_clipboard entry_password, waiting
-
     end
   end    
 
@@ -177,6 +180,8 @@ EOS
 
       FileOps::backup filename
       FileOps::save filename, new_string
+
+      puts "Entry deleted."
     end
   end
   
