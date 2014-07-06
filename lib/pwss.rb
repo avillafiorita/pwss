@@ -39,6 +39,7 @@ module Pwss
     id = choose_entry search_string, entries
     password = Cipher::check_password
     entries[id]["password"] = password
+    entries[id]["updated_at"] = Date.today
     entries
   end
     

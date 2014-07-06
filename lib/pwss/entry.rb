@@ -15,7 +15,8 @@ module Pwss
       "title"       => ["Readline.readline('title: ')", "'title'"],
       "username"    => ["Readline.readline('username: ')", "''"],
       "password"    => ["Cipher.check_password('password for entry: ')", "''"],
-      "added"       => ["", "Date.today.to_s"],
+      "created_at"  => ["", "Date.today"],
+      "updated_at"  => ["", "nil"],
       "url"         => ["Readline.readline('url: ')", "''"],
       "description" => ["get_lines",   "''"]
     }
