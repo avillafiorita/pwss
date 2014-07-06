@@ -82,20 +82,27 @@ module Pwss
     end
 
     if found.size == 0 then
-      printf "\nNo entry matches the search criteria."
-      return -1
+      printf "No entry matches the search criteria.\n"
+      exit -1
     end
 
     if found.size > 1 then
-      printf "\nVarious matches. Select entry by ID (0..#{found.size-1}): "
+      printf "\nVarious matches.\nSelect entry by ID (0..#{found.size-1}) or -1 to exit: "
       id = STDIN.gets.chomp.to_i
+      while (id < -1 or id >= found.size)
+        printf "Select entry by ID (0..#{found.size-1}) or -1 to exit: "
+        id = STDIN.gets.chomp.to_i
+      end
+      if id == -1 then
+        exit -1
+      end
     else
       id = 0
     end
 
     found[id]
   end
-
+  
   #
   # Print entry
   #
