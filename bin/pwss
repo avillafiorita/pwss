@@ -222,6 +222,7 @@ EOS
       dec_filename = filename.sub(/\.enc$/,"")
       FileOps::save dec_filename, decrypted
       puts "A decrypted copy now lives in #{dec_filename}"
+      puts "You might want to check everything is ok and delete #{filename}, if you wish."
     end
   end
 
