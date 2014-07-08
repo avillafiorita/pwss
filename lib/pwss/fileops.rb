@@ -16,6 +16,7 @@ module FileOps
     file = File.open(filename, "wb")
     file.write data
     file.close
+    puts "Password safe #{filename} updated."
   end
 
   # check if the extension is ".enc"
@@ -25,6 +26,7 @@ module FileOps
 
   def self.backup filename
     FileUtils::cp filename, filename + "~"
+    puts "Backup copy of password safe created in #{filename}~."
   end
   
 end
