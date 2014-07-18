@@ -31,11 +31,11 @@ Features:
 EOS
 
   p.syntax "pwss [global option] <subcommand> [options] args"
-  p.option 'filename', '--filename FILE', '-f FILE', 'Password file'
-  p.option "generate", "--generate LENGTH", "-g LENGTH", "generate a password of length LENGTH"
-  p.option "alnum", "--alnum", "-a", "use only alphabetic and numeric characters for the generated password"
-  p.option 'wait', '--wait SECONDS', '-w SECONDS', 'Number of seconds password is available in the clipboard (use 0 for interactive).'
-  p.option 'field', '--field FIELD', '-f FIELD', 'Field to update (if not specified, update the password field)'
+  p.option 'filename', '-f FILE', '--filename FILE', 'Password file'
+  p.option "generate", "-g LENGTH", "--generate LENGTH", "generate a password of length LENGTH"
+  p.option "alnum", "-a", "--alnum", "use only alphabetic and numeric characters for the generated password"
+  p.option 'wait', '-w SECONDS', '--wait SECONDS', 'Number of seconds password is available in the clipboard (use 0 for interactive).'
+  p.option 'field', '--field FIELD', 'Field to update (if not specified, update the password field)'
 
   p.command(:init) do |c|
     c.syntax "init"

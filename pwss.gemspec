@@ -27,6 +27,6 @@ Distinguishing features:
   spec.add_development_dependency "bundler", "~> 1.5"
   spec.add_development_dependency "rake"
 
-  spec.add_runtime_dependency 'mercenary', '~> 0.3.3', '>= 0.3.3'
+  spec.add_runtime_dependency 'mercenary', '~> 0.3.4', '>= 0.3.4'
   spec.add_runtime_dependency 'encryptor', '~> 1.3.0', '>= 1.3.0'     
 end
