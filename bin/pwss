@@ -32,9 +32,10 @@ EOS
 
   p.syntax "pwss [global option] <subcommand> [options] args"
   p.option 'filename', '--filename FILE', '-f FILE', 'Password file'
-  p.option "generate", "--generate LENGTH", "-g LENGTH", "automatically generate a password of length LENGTH"
-  p.option "alnum", "--alnum", "-a", "use only alphabetic and numeric characters"
+  p.option "generate", "--generate LENGTH", "-g LENGTH", "generate a password of length LENGTH"
+  p.option "alnum", "--alnum", "-a", "use only alphabetic and numeric characters for the generated password"
   p.option 'wait', '--wait SECONDS', '-w SECONDS', 'Number of seconds password is available in the clipboard (use 0 for interactive).'
+  p.option 'field', '--field FIELD', '-f FIELD', 'Field to update (if not specified, update the password field)'
 
   p.command(:init) do |c|
     c.syntax "init"
@@ -134,12 +135,19 @@ EOS
       filename = opts['filename'] || DEFAULT_FILENAME
       waiting = opts['wait'] ? opts['wait'].to_i : 30
       length = opts['generate'] ? opts['generate'].to_i : 0
+      field = opts['field']
 
       string, password = file2string filename
 
       # load entries and update 
       entries = YAML::load(string) || Array.new
-      entries, entry_password = Pwss::update args.join(" "), entries, length, opts["alnum"]
+
+      if field then
+        entries, entry_password = Pwss::update_field args.join(" "), entries, field
+      else
+        # update password
+        entries, entry_password = Pwss::update args.join(" "), entries, length, opts["alnum"]
+      end
 
       # check status of input file and encrypt if necessary
       if FileOps::encrypted? filename then

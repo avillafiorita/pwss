@@ -15,7 +15,7 @@ module Pwss
 
 
   def self.update search_string, entries, length, alnum
-    id = choose_entry search_string, entries
+    id = choose_entry search_string, entries, true
 
     password = Cipher.check_or_generate "new password for entry", length, alnum
 
@@ -25,9 +25,21 @@ module Pwss
     return entries, password
   end
     
+  def self.update_field search_string, entries, field
+    id = choose_entry search_string, entries, true
+
+    field_value = Readline.readline("\nEnter new value for #{field}: ")
+    
+    entries[id][field] = field_value
+    entries[id]["updated_at"] = Date.today
+    password = entries[id]["password"]
+    
+    return entries, password
+  end
+
 
   def self.destroy search_string, entries
-    id = choose_entry search_string, entries
+    id = choose_entry search_string, entries, true
 
     entries.delete_at(id) if id != -1
     entries
@@ -52,8 +64,9 @@ module Pwss
     # here we have a nuisance: we want the user to choose one entry
     # by relative id (e.g. the third found), but we need to return
     # the absolute id (to update the right entry in the safe)
+    #
     # ... so we just keep track of the real ids with an array
-    #     and we ask the user the index of the array
+    #     the relative id is the index in the array
 
     index = 0
     found = Array.new
@@ -71,8 +84,9 @@ module Pwss
     end
 
     if found.size > 1 or confirm_even_if_one then
-      printf "\nVarious matches.\n" if found.size > 1
-      printf "Select entry by ID (0..#{found.size-1}) or -1 to exit: "
+      printf "\nVarious matches." if found.size > 1
+      printf "\nSelect entry by ID (0..#{found.size-1}) or -1 to exit: "
+
       id = STDIN.gets.chomp.to_i
       while (id < -1 or id >= found.size)
         printf "Select entry by ID (0..#{found.size-1}) or -1 to exit: "
