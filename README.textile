@@ -134,6 +134,14 @@ Example
 
 Notice that only @title@ and @password@ are required.
 
+h2. Changelog
+
+* *Release 0.1.0*
+** the update command now allows one to update the password or any other field of existing entries
+** a simple password generator allows pwss to generate a random password
+** most commands make the password of the selected entry available in the clipboard (useful, for instance, if you automatically generate a password)
+** a destroy command allows one to delete an entry from a safe.  Similar to get, all entries matching a query are shown.  The user is then asked to select which entry has to be deleted or stop.  User confirmation is required even in case of a single match.
+
 h2. License and Additional Disclaimer
 
 Licensed under the terms of the MIT License.

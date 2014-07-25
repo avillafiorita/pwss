@@ -24,23 +24,20 @@ Features:
 * The user can manage different files (safes)
 * CRUD (create, read, update, delete) commands are available to
   operate on entries and safes
-* Safes can be encrypted (to improve security)
-* Encrypted safes can be decrypted (for instance to batch process
-  entries, to migrate to another tool, or to manually edit entries)
-* Entries are human readable and editable (when not encrypted)
+* Safes can be encrypted
+* Encrypted safes can be decrypted, for instance, to batch process
+  entries, to migrate to another tool, or to manually edit entries
+* Entries are human-readable (and editable), when not encrypted
 EOS
 
-  p.syntax "pwss [global option] <subcommand> [options] args"
+  p.syntax "pwss <subcommand> [options] [args]"
   p.option 'filename', '-f FILE', '--filename FILE', 'Password file'
-  p.option "generate", "-g LENGTH", "--generate LENGTH", "generate a password of length LENGTH"
-  p.option "alnum", "-a", "--alnum", "use only alphabetic and numeric characters for the generated password"
-  p.option 'wait', '-w SECONDS', '--wait SECONDS', 'Number of seconds password is available in the clipboard (use 0 for interactive).'
-  p.option 'field', '--field FIELD', 'Field to update (if not specified, update the password field)'
+  p.option 'wait', '-w SECS', '--wait SECS', 'Number of seconds password is available in the clipboard (use 0 for interactive).'
 
   p.command(:init) do |c|
     c.syntax "init"
-    c.description "Init a new password file (= password safe)"
-      
+    c.description 'Init a new password file (= password safe)'
+
     c.action do |args, opts|
       filename = opts['filename']  || DEFAULT_FILENAME
 
@@ -62,7 +59,7 @@ EOS
   end
 
   p.command(:list) do |c|
-    c.syntax "list all entries"
+    c.syntax "list"
     c.description "List all entries in a safe"
       
     c.action do |args, opts|
@@ -77,7 +74,7 @@ EOS
 
   p.command(:get) do |c|
     c.syntax "get string"
-    c.description "Get password for entry matching string in title"
+    c.description "Get password for entry matching <string> in the title field"
 
     c.action do |args, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
@@ -92,9 +89,12 @@ EOS
   end
 
   p.command(:add) do |c|
-    c.syntax "add an entry"
+    c.syntax "add"
     c.description "Add an entry to a password safe"
       
+    c.option "generate", "-g LENGTH", "--generate LENGTH", "automatically generate a password of length LENGTH"
+    c.option "alnum", "-a", "--alnum", "use only alphanumeric characters for the generated password"
+
     c.action do |args, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
       waiting = opts['wait'] ? opts['wait'].to_i : 30
@@ -128,8 +128,12 @@ EOS
   end
 
   p.command(:update) do |c|
-    c.syntax "update the password of an existing entry"
-    c.description "Update the password of an existing entry"
+    c.syntax "update a field of an existing entry"
+    c.description "Update some field of an existing entry (default: password)"
+
+    c.option 'field', '--field FIELD', 'Field to update (if not specified, update the password field)'
+    c.option "generate", "-g LENGTH", "--generate LENGTH", "generate a password of length LENGTH"
+    c.option "alnum", "-a", "--alnum", "use only alphabetic and numeric characters for the generated password"
 
     c.action do |args, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
@@ -168,8 +172,13 @@ EOS
 
 
   p.command(:destroy) do |c|
-    c.syntax "delete an entry"
-    c.description "Permenently delete an entry from a safe"
+    c.syntax "destroy string"
+    c.description "Show entries matching <string> and let the user select one to destroy"
+
+    # Look for entries matching string, offer the user to select one of the
+    # matching entries, and destroy the entry.  
+    # The command asks for confirmation even if there is only one matching entry.
+    # Destroyed entries cannot be recovered (unless you dig in the backup file).
       
     c.action do |args, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
