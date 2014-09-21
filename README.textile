@@ -136,6 +136,10 @@ Notice that only @title@ and @password@ are required.
 
 h2. Changelog
 
+* *Release 0.2.0*
+** it is now possible to add entries of various types (= with different fields).  The supported types include: CreditCard, BankAccount, SoftwareLicense.  Use the -e (--entry) option to specify the type of entry to add
+** an empty string can now be used to exit (instead of -1) when multiple matches are found
+
 * *Release 0.1.0*
 ** the update command now allows one to update the password or any other field of existing entries
 ** a simple password generator allows pwss to generate a random password
