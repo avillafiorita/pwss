@@ -1,4 +1,6 @@
 require 'readline'
+require 'pwss/cipher'
+require 'date'
 
 module Pwss
   #
@@ -6,41 +8,41 @@ module Pwss
   # It is a wrapper to a Hash
   #
   class Entry
-    INPUT_F=0
-    DEFAULT=1
-    PROMPT=2
+    INPUT_F = 0 
+    DEFAULT = 1
 
-    # the fields of an entry, together with the function to ask the and default value
-    FIELDS = {
-      "title"       => ["Readline.readline('title: ')", "'title'"],
-      "username"    => ["Readline.readline('username: ')", "''"],
-      "password"    => ["Cipher.check_or_generate('password for entry', length, alnum)", "''"],
-      "created_at"  => ["", "Date.today"],
-      "updated_at"  => ["", "nil"],
-      "url"         => ["Readline.readline('url: ')", "''"],
-      "description" => ["get_lines",   "''"]
-    }
-
-    # the values (a Hash) of this issue
-    attr_reader :entry
+    attr_reader :entry, :fields
 
     def initialize
       @entry = Hash.new
+
+      # the fields of an entry, together with:
+      # - the function to ask the 
+      # - the default value
+      @fields = {
+        "title"       => ["Readline.readline('title: ')", "'title'"],
+        "username"    => ["Readline.readline('username: ')", "''"],
+        "password"    => ["Cipher.check_or_generate('password for entry', length, alnum)", "''"],
+        "created_at"  => ["", "Date.today"],
+        "updated_at"  => ["", "nil"],
+        "url"         => ["Readline.readline('url: ')", "''"],
+        "description" => ["get_lines",   "''"]
+      }
     end
 
     # interactively ask from command line all fields specified in FIELDS
     # arguments length and alnum are for password generation
-    def ask length, alnum
-      FIELDS.keys.each do |key|
-        @entry[key] = (eval FIELDS[key][INPUT_F]) || (eval FIELDS[key][DEFAULT])
+    def ask length = 8, alnum = true
+      @fields.keys.each do |key|
+        @entry[key] = (eval @fields[key][INPUT_F]) || (eval @fields[key][DEFAULT])
       end
     end
     
     # initialize all fields with the default values
     # (and set title to the argument)
     # def set_fields title
-    #   FIELDS.keys.each do |k|
-    #     @entry[k] = eval(FIELDS[k][DEFAULT])
+    #   fields.keys.each do |k|
+    #     @entry[k] = eval(fields[k][DEFAULT])
     #   end
     #   @entry['title'] = title
     # end

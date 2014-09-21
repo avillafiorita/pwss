@@ -8,6 +8,8 @@ require "pwss"
 require "pwss/version"
 require "pwss/cipher"
 require "pwss/entry"
+require "pwss/credit_card"
+require "pwss/bank_account"
 require "pwss/fileops"
 
 Mercenary.program(:pwss) do |p|
@@ -94,17 +96,22 @@ EOS
       
     c.option "generate", "-g LENGTH", "--generate LENGTH", "automatically generate a password of length LENGTH"
     c.option "alnum", "-a", "--alnum", "use only alphanumeric characters for the generated password"
+    c.option "type", "-e TYPE", "--entry TYPE", "create an entry of type TYPE (CreditCard, BankAccount). It defaults to Entry, which is good for websites credentials)"
 
     c.action do |args, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
       waiting = opts['wait'] ? opts['wait'].to_i : 30
       length = opts['generate'] ? opts['generate'].to_i : 0
+      type = opts['type'] || "Entry"
 
       string, password = file2string filename
 
+      puts "Adding an entry of type: #{type}"
       # ask for a new entry
-      pe = Pwss::Entry.new
+      pe = eval("Pwss::" + type).new
+      puts pe
       pe.ask length, opts['alnum']
+      
 
       # add the entry to the safe
       entries = YAML::load(string) || Array.new
