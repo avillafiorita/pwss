@@ -85,12 +85,13 @@ module Pwss
 
     if found.size > 1 or confirm_even_if_one then
       printf "\nVarious matches." if found.size > 1
-      printf "\nSelect entry by ID (0..#{found.size-1}) or -1 to exit: "
+      printf "\nSelect entry by ID (0..#{found.size-1}); -1 or empty string to exit: "
 
       id = STDIN.gets.chomp.to_i
       while (id < -1 or id >= found.size)
-        printf "Select entry by ID (0..#{found.size-1}) or -1 to exit: "
-        id = STDIN.gets.chomp.to_i
+        printf "Select entry by ID (0..#{found.size-1}); -1 or empty string to exit: "
+        response = STDIN.gets.chomp
+        id = response == "" ? -1 : response.to_i
       end
       if id == -1 then
         exit -1

@@ -10,6 +10,7 @@ module Pwss
         "license_number" => ["Readline.readline('license number: ')", "000-0000-0000-0000"],
         "licensed_to"    => ["Readline.readline('licensed to: ')", "'John Doe'"],
         "email"          => ["Readline.readline('email: ')", "jdoe@example.com"],
+        "purchased_on"   => ["Readline.readline('purchased on: ')", "'Date.today'"],
         "created_at"     => ["", "Date.today"],
         "updated_at"     => ["", "nil"],
         "url"            => ["Readline.readline('url: ')", "''"],

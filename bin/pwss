@@ -10,6 +10,7 @@ require "pwss/cipher"
 require "pwss/entry"
 require "pwss/credit_card"
 require "pwss/bank_account"
+require "pwss/software_license"
 require "pwss/fileops"
 
 Mercenary.program(:pwss) do |p|
@@ -96,7 +97,7 @@ EOS
       
     c.option "generate", "-g LENGTH", "--generate LENGTH", "automatically generate a password of length LENGTH"
     c.option "alnum", "-a", "--alnum", "use only alphanumeric characters for the generated password"
-    c.option "type", "-e TYPE", "--entry TYPE", "create an entry of type TYPE (CreditCard, BankAccount). It defaults to Entry, which is good for websites credentials)"
+    c.option "type", "-e TYPE", "--entry TYPE", "create an entry of type TYPE (CreditCard, BankAccount, SoftwareLicense). It defaults to Entry, which is good for websites credentials)"
 
     c.action do |args, opts|
       filename = opts['filename'] || DEFAULT_FILENAME
@@ -109,7 +110,6 @@ EOS
       puts "Adding an entry of type: #{type}"
       # ask for a new entry
       pe = eval("Pwss::" + type).new
-      puts pe
       pe.ask length, opts['alnum']
       
 
@@ -129,8 +129,10 @@ EOS
 
       puts "Entry added."
       
-      # make password available in the clipboard
-      Cipher.password_to_clipboard pe.entry["password"], waiting
+      # make password available in the clipboard, if there is a password to make available
+      if pe.entry["password"] 
+        Cipher.password_to_clipboard pe.entry["password"], waiting
+      end
     end
   end
 
