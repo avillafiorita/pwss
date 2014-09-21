@@ -87,7 +87,9 @@ EOS
       entries = YAML::load(string) || Array.new
 
       password = Pwss::get args.join(" "), entries
-      Cipher.password_to_clipboard password, waiting
+      if password
+        Cipher.password_to_clipboard password, waiting 
+      end
     end
   end
 
@@ -175,7 +177,9 @@ EOS
       puts "Entry updated."
 
       # copy to clipboard the new password
-      Cipher.password_to_clipboard entry_password, waiting
+      if entry_password
+        Cipher.password_to_clipboard entry_password, waiting
+      end
     end
   end    
 
