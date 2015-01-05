@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'fileutils'
-require 'mercenary'
+require 'slop'
 require 'date'
 
 require "pwss"
@@ -13,36 +13,118 @@ require "pwss/bank_account"
 require "pwss/software_license"
 require "pwss/fileops"
 
-Mercenary.program(:pwss) do |p|
-  DEFAULT_FILENAME = File.join(Dir.home, ".pwss.yaml.enc")
+# load filename and decrypt, if necessary
+# return the filename as string and the password (in case you need to save)
+def file2string filename
+  string = FileOps::load filename
+  if FileOps::encrypted? filename then
+    password = Cipher::ask_password
+    string = Cipher::decrypt string, password
+  end
+  [string, password]
+end
 
-  p.version Pwss::VERSION
-  p.description <<EOS
-PWSS is a password safe, in the spirit of pws
 
-Features:
+version = Pwss::VERSION
+man = <<EOS
+NAME
+  pwss -- A command-line password manager
 
-* Each entry stores: title, username, password, url, description
-* A file (or safe) can store many entries
-* The user can manage different files (safes)
-* CRUD (create, read, update, delete) commands are available to
-  operate on entries and safes
-* Safes can be encrypted
-* Encrypted safes can be decrypted, for instance, to batch process
-  entries, to migrate to another tool, or to manually edit entries
-* Entries are human-readable (and editable), when not encrypted
+SYNOPSYS
+  pwss [-h|-v]
+  pwss command [options] [args]
+
+DESCRIPTION
+  PWSS is a password manager, in the spirit of pws.
+
+  Features:
+
+  * PWSS manages password files.  A password file store passwords and other
+    sensitive information
+
+  * Entries in a password file can be of the following pre-defined types:
+    Entry, CreditCard, BankAccount, SoftwareLicense
+
+  * Information stored for each type:
+
+    - Entry:           title, username, password, url, description
+    - CreditCard:      title, issuer, name_on_card, card_number, valid_from, 
+                       valid_till, verification_number, pin, url, notes
+    - BankAccount:     title, name, iban, url, description
+    - SoftwareLicense: title, version, license_number, licensed_to,
+                       email, purchased_on
+
+  * CRUD (create, read, update, delete) commands are available to
+    operate on entries and password files
+
+  * The user can manage different password files (e.g., work, personal)
+  * Password files can be encrypted
+  * Encrypted password files can be decrypted, for instance, to batch process
+    entries, to migrate to another tool, or to manually edit entries
+  * Entries are human-readable (and editable), when the password file is not
+    encrypted
+
+EXAMPLES
+  pwss -h                               # get syntax of each command
+
+  # scenario
+  pwss init -f a.enc                    # generate an encrypted safe a.enc
+  pwss add -f a.enc -g 16 -a            # add an entry (generating a password)
+  pwss get -f a.enc my secret account   # find an entry
+
+VERSION
+  This is version #{version}
+
+LICENSE
+  MIT
+
+SEE ALSO
+  pwss -h
+  https://github.com/avillafiorita/pwss
 EOS
 
-  p.syntax "pwss <subcommand> [options] [args]"
-  p.option 'filename', '-f FILE', '--filename FILE', 'Password file'
-  p.option 'wait', '-w SECS', '--wait SECS', 'Number of seconds password is available in the clipboard (use 0 for interactive).'
 
-  p.command(:init) do |c|
-    c.syntax "init"
-    c.description 'Init a new password file (= password safe)'
 
-    c.action do |args, opts|
-      filename = opts['filename']  || DEFAULT_FILENAME
+#
+# Main App Starts Here!
+#
+opts = Slop.parse :help => true do
+  # the default filename
+  DEFAULT_FILENAME = File.join(Dir.home, ".pwss.yaml.enc")
+  # the default number of seconds password is available in the clipboard
+  DEFAULT_SECS = 30
+
+  banner "pwss [-h|-v]\npwss <command> [options] [args]"
+
+  ##############################################################################
+  on "-v", "--version", 'Print version information' do
+    puts "pwss version #{version}"
+  end
+
+  ##############################################################################
+  command :help do
+    banner "pwss help"
+    description "Print detailed information about how to use pwss"
+
+    run do |_, _|
+      puts man
+    end
+  end
+
+  ##############################################################################
+  command :init do
+    banner "pwss init [options]"
+    description "Init a new password file"
+
+    on "-f", "--filename=", "Password file to create. Use extension '.enc' to encrypt it."
+
+    run do |opts, args|
+      filename = opts.to_hash[:filename] || DEFAULT_FILENAME
+
+      if File.exists?(filename)
+        puts "Error: file #{filename} already exists."
+        exit 1
+      end
 
       empty_safe = "# safe created on #{Date.today}\n"
 
@@ -61,12 +143,15 @@ EOS
     end
   end
 
-  p.command(:list) do |c|
-    c.syntax "list"
-    c.description "List all entries in a safe"
-      
-    c.action do |args, opts|
-      filename = opts['filename']  || DEFAULT_FILENAME
+  ##############################################################################
+  command :list do
+    banner "pwss list [options]"
+    description "List all entries of a file (e.g., to decrypt or batch process)"
+
+    on "-f", "--filename=", "Password file to use."
+
+    run do |opts, args|
+      filename = opts.to_hash[:filename] || DEFAULT_FILENAME
 
       string, _ = file2string filename
       entries = YAML::load(string) || Array.new
@@ -75,14 +160,18 @@ EOS
     end
   end
 
-  p.command(:get) do |c|
-    c.syntax "get string"
-    c.description "Get password for entry matching <string> in the title field"
+  ##############################################################################
+  command :get do
+    banner "pwss get [options] string"
+    description "Get password for entry matching <string> in the title field"
 
-    c.action do |args, opts|
-      filename = opts['filename'] || DEFAULT_FILENAME
-      waiting = opts['wait'] ? opts['wait'].to_i : 30
-      
+    on "-f", "--filename=", "Password file to use."
+    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive).", as: Integer
+
+    run  do |opts, args|
+      filename = opts.to_hash[:filename] || DEFAULT_FILENAME
+      waiting = opts.to_hash[:wait] || DEFAULT_SECS
+
       string, _ = file2string filename
       entries = YAML::load(string) || Array.new
 
@@ -93,27 +182,33 @@ EOS
     end
   end
 
-  p.command(:add) do |c|
-    c.syntax "add"
-    c.description "Add an entry to a password safe"
-      
-    c.option "generate", "-g LENGTH", "--generate LENGTH", "automatically generate a password of length LENGTH"
-    c.option "alnum", "-a", "--alnum", "use only alphanumeric characters for the generated password"
-    c.option "type", "-e TYPE", "--entry TYPE", "create an entry of type TYPE (CreditCard, BankAccount, SoftwareLicense). It defaults to Entry, which is good for websites credentials)"
 
-    c.action do |args, opts|
-      filename = opts['filename'] || DEFAULT_FILENAME
-      waiting = opts['wait'] ? opts['wait'].to_i : 30
-      length = opts['generate'] ? opts['generate'].to_i : 0
-      type = opts['type'] || "Entry"
+  ##############################################################################
+  command :add do
+    banner "pwss add [options]"
+    description "Add an entry and copy its password in the clipboard"
+
+    on "-f", "--filename=", "Password file to use."
+    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive).", as: Integer
+      
+    on "-e", "--entry=", "Create an entry of type TYPE (Entry, CreditCard, BankAccount, SoftwareLicense).\n                        Default to 'Entry', which is good enough for websites credentials."
+
+    on "-g", "--generate=", "Generate a random password of given length.", as: Integer
+    on "-a", "--alnum", "Use only alphanumeric chars for the randomly generated password."
+
+    run do |opts, args|
+      filename = opts.to_hash[:filename] || DEFAULT_FILENAME
+      waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
+      length   = opts.to_hash[:length]   || 0
+      type     = opts.to_hash[:type]     || "Entry"
+      alnum    = opts.to_hash[:alnum]
 
       string, password = file2string filename
 
       puts "Adding an entry of type: #{type}"
       # ask for a new entry
       pe = eval("Pwss::" + type).new
-      pe.ask length, opts['alnum']
-      
+      pe.ask length, alnum
 
       # add the entry to the safe
       entries = YAML::load(string) || Array.new
@@ -138,19 +233,23 @@ EOS
     end
   end
 
-  p.command(:update) do |c|
-    c.syntax "update a field of an existing entry"
-    c.description "Update some field of an existing entry (default: password)"
+  ##############################################################################
+  command :update do
+    banner "pwss update [options] string"
+    description "Update given field of user-selected entry matching <string>"
 
-    c.option 'field', '--field FIELD', 'Field to update (if not specified, update the password field)'
-    c.option "generate", "-g LENGTH", "--generate LENGTH", "generate a password of length LENGTH"
-    c.option "alnum", "-a", "--alnum", "use only alphabetic and numeric characters for the generated password"
+    on "-f", "--filename=", "Password file to use."
+    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive).", as: Integer
+    on "-g", "--generate=", "Generate a random password of given length.", as: Integer
+    on "-a", "--alnum", "Use only alphanumeric chars for the randomly generated password."
+    on '--field=', 'Field to update (if not specified, update the password field).'
 
-    c.action do |args, opts|
-      filename = opts['filename'] || DEFAULT_FILENAME
-      waiting = opts['wait'] ? opts['wait'].to_i : 30
-      length = opts['generate'] ? opts['generate'].to_i : 0
-      field = opts['field']
+    run do |opts, args|
+      filename = opts.to_hash[:filename] || DEFAULT_FILENAME
+      waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
+      length   = opts.to_hash[:length]   || 0
+      alnum    = opts.to_hash[:alnum]
+      field    = opts.to_hash[:field]
 
       string, password = file2string filename
 
@@ -161,7 +260,7 @@ EOS
         entries, entry_password = Pwss::update_field args.join(" "), entries, field
       else
         # update password
-        entries, entry_password = Pwss::update args.join(" "), entries, length, opts["alnum"]
+        entries, entry_password = Pwss::update args.join(" "), entries, length, alnum
       end
 
       # check status of input file and encrypt if necessary
@@ -183,18 +282,19 @@ EOS
     end
   end    
 
+  ##############################################################################
+  # Look for entries matching string, offer the user to select one of the
+  # matching entries, and destroy the entry.  
+  # The command asks for confirmation even if there is only one matching entry.
+  # Destroyed entries cannot be recovered (unless you dig in the backup file).
+  command :destroy do
+    banner "pwss destroy [options] string"
+    description "Destroy a user-selected entry matching <string>, after user confirmation."
 
-  p.command(:destroy) do |c|
-    c.syntax "destroy string"
-    c.description "Show entries matching <string> and let the user select one to destroy"
+    on "-f", "--filename=", "Password file to create. Use extension '.enc' to encrypt it."
 
-    # Look for entries matching string, offer the user to select one of the
-    # matching entries, and destroy the entry.  
-    # The command asks for confirmation even if there is only one matching entry.
-    # Destroyed entries cannot be recovered (unless you dig in the backup file).
-      
-    c.action do |args, opts|
-      filename = opts['filename'] || DEFAULT_FILENAME
+    run do |opts, args|
+      filename = opts.to_hash[:filename] || DEFAULT_FILENAME
 
       string, password = file2string filename
       entries = YAML::load(string)
@@ -214,64 +314,71 @@ EOS
       puts "Entry deleted."
     end
   end
-  
 
-  #
-  # Operations on the master file
-  #
+  ##############################################################################
+  # OPERATIONS ON PASSWORD FILES
+  ##############################################################################
 
-  p.command(:encrypt) do |c|
-    c.syntax "encrypt"
-    c.description "Encrypt a password safe"
-      
-    c.action do |_, opts|
-      filename = opts['filename'] || DEFAULT_FILENAME.sub(/\.enc$/, "")
+  ##############################################################################
+  command :encrypt do
+    banner "pwss encrypt [options]"
+    description "Encrypt a password safe"
+    
+    on "-f", "--filename=", "Password file to encrypt. Write to <file>.enc."
+
+    run do |opts, _|
+      filename = opts.to_hash[:filename] || DEFAULT_FILENAME.sub(/\.enc$/, "")
+
+      if not File.exists?(filename)
+        puts "Error: file #{filename} does not exist."
+        exit 1
+      end
 
       password = Cipher::check_password
       data = FileOps::load filename
       encrypted = Cipher::encrypt data, password
 
       enc_filename = filename + ".enc"
+
+      if File.exists?(enc_filename)
+        FileOps::backup enc_filename
+        puts "Warning: existing #{enc_filename} backupped to #{enc_filename}~"
+      end
       FileOps::save enc_filename, encrypted
       puts "An encrypted copy now lives in #{enc_filename}"
       puts "You might want to check everything is ok and delete the plain file: #{filename}"
     end
   end
 
-  p.command(:decrypt) do |c|
-    c.syntax "decrypt"
-    c.description "Decrypt a password safe"
-      
-    c.action do |_, opts|
-      filename = opts['filename'] || DEFAULT_FILENAME
+  ##############################################################################
+  command :decrypt do
+    banner "pwss decrypt [options]"
+    description "Decrypt a password safe"
+
+    on "-f", "--filename=", "Password file to decrypt.  Write to <file>, without '.enc'."
+
+    run do |opts, _|
+      filename = opts.to_hash[:filename] || DEFAULT_FILENAME
+
+      if not File.exists?(filename)
+        puts "Error: file #{filename} does not exist."
+        exit 1
+      end
 
       password = Cipher::ask_password
       data = FileOps::load filename
       decrypted = Cipher::decrypt data, password
 
       dec_filename = filename.sub(/\.enc$/,"")
+      if File.exists?(dec_filename)
+        FileOps::backup dec_filename
+        puts "Warning: existing #{dec_filename} backupped to #{dec_filename}~"
+      end
+            
       FileOps::save dec_filename, decrypted
       puts "A decrypted copy now lives in #{dec_filename}"
       puts "You might want to check everything is ok and delete #{filename}, if you wish."
     end
   end
 
-  p.command(:help) do |c|
-    c.action do |_,_|
-      puts p.to_s
-    end
-  end
-
-  p.default_command(:help)
-
-  # load filename and decrypt, if necessary
-  # return the filename as string and the password (in case you need to save)
-  def file2string filename
-    string = FileOps::load filename
-    if FileOps::encrypted? filename then
-      password = Cipher::ask_password
-      string = Cipher::decrypt string, password
-    end
-    [string, password]
-  end
 end

@@ -2,48 +2,71 @@ h1. Pwss
 
 A password manager in the spirit of "pws":https://github.com/janlelis/pws.
 
+PWSS can store multiple entries in a file and, more important, it allows user to specify various types of entries (e.g., BankAccount) and different infos for each entry (e.g., URL for Internet passwords).
+
 Features:
 
-* Each entry stores: title, username, password, url, description
-* A file (or safe) can store many entries
-* The user can manage different files (safes)
+* PWSS manages password files.  A password file store passwords and other
+  sensitive information
+
+* Entries in a password file can be of the following pre-defined types:
+  Entry, CreditCard, BankAccount, SoftwareLicense
+
+* Information stored for each type:
+
+  - Entry:           title, username, password, url, description
+  - CreditCard:      title, issuer, name_on_card, card_number, valid_from, 
+                     valid_till, verification_number, pin, url, notes
+  - BankAccount:     title, name, iban, url, description
+  - SoftwareLicense: title, version, license_number, licensed_to,
+                     email, purchased_on
+
 * CRUD (create, read, update, delete) commands are available to
-  operate on entries and safes
-* pwss can generate completely random passwords for you
-* Safes can be encrypted (to improve security)
-* Encrypted safes can be decrypted (for instance to batch process
-  entries, to migrate to another tool, or to manually edit entries)
-* Entries are human readable and editable (when not encrypted)
+  operate on entries and password files
+
+* The user can manage different password files (e.g., work, personal)
+* Password files can be encrypted
+* Encrypted password files can be decrypted, for instance, to batch process
+  entries, to migrate to another tool, or to manually edit entries
+* Entries are human-readable (and editable), when the password file is not
+  encrypted
 
 h2. Installation
 
-Add this line to your application's Gemfile:
-
-bc. gem 'pwss'
-
-And then execute:
-
-bc. $ bundle
-
-Or install it yourself as:
+Type from the command line:
 
 bc. $ gem install pwss
 
-h2. Usage
+h2. Quick Start
 
-*Getting started.* @pwss@ stores passwords in a YAML file (also called "password safe" in the following), possibly encrypted.
+Try the following:
+
+bc. $ pwss init
+$ pwss add
+$ pwss get <title you gave with previous command>
+
+For some more information:
+
+bc. $ pwss help # get information from the command line
+$ pwss -h   # command syntax
+
+h2. Detailed Instructions
+
+*Getting started.* @pwss@ stores passwords in a YAML file (also called "safe" or "password file" in the following), possibly encrypted.
 
 A typical usage scenario is the following:
 
 # @pwss init@ will create a new encrypted password safe in @~/.pwss.yaml.enc@
 # @pwss add@ will add a new entry to the file
-# @pwss get entry@ will retrieve all entries whose *title* contains @entry@ and make the password of the chosen entry available in the clipboard
+# @pwss get string@ will retrieve all entries whose *title* contains @string@ and make the password of the chosen entry available in the clipboard for a given period (the default is 30 seconds; the option @-w@ controls the amount of time the password is available)
 
-*Using multiple safes.* If you want to create multiple password safes or store the password safe in a non-standard location, use the @-f@ (@--filename@) option:
+*Using multiple safes.* If you want to create multiple password files or store a password file in a non-standard location, use the @-f@ (@--filename@) option:
 
 # @pwss -f MYFILE init@
 # @pwss -f MYFILE add@
 # @pwss -f MYFILE get@
+
+*Do not forget to use the extension @.enc@, if your password file to be encrypted.* (See "Encrypted and Plain files", below.)
 
 *Controlling how long passwords are made available* Use the @-w@ option to determine how long the password is made available in the clipboard.  For instance:
 
@@ -53,7 +76,13 @@ will retrieve entry whose title is @my_email@ and make the password available in
 
 Use @0@ to keep the password in the clipboard till a key is pressed.
 
-*Automatically Generated Password* pwss can automatically generate passwords for entries which are added or updated, using the @-g LENGTH@ option, where @LENGTH@ is the length of the password to generate.  If you want to generate password including only alphabetic and numeric characters, use the @-a@ option.  *The passwords are made available in the clipboard, so that it can be used as needed*.
+*Automatically Generated Password* pwss can automatically generate passwords for entries which are added or updated.
+
+The generated passwords are random sequences of chars and symbols and no attempt is made to make them readable or simpler to remember.  You can use the @-a@ option to limit the generator to use only digits and letters ([0-9a-zA-Z]): this is useful, for instance, if the website you're generating the password for does not accept certain classes of characters.
+
+Use the @-g LENGTH@ option to determine the password length.
+
+*The automatically generated password is made available in the clipboard, so that it can be used as needed*.
 
 For instance:
 
@@ -61,27 +90,25 @@ bc. $ pwss update my_email -g 10 -a -w 20
 
 will update the @my_email@ entry, by replacing the existing password with one of length @10@ automatically generated by @pwss@; the password contains only alphabetic characters and digits.  The new password will be made available in the clipboard for @20@ seconds.
 
-*Encrypted and Plain Files.* @pwss@ works equally well with encrypted and plain files.  More in details, the file extension determines whether @pwss@ tries to decrypt/encrypt the file or not.  The @.enc@ extension tells @pwss@ that the file is encrypted; any other extension will tell @pwss@ to treat the file as plain text.
+*Encrypted and Plain Files.* @pwss@ works equally well with encrypted and plain files.  More in details, the file extension determines whether @pwss@ tries to decrypt/encrypt the file or not.  Use @.enc@ extension to tell @pwss@ the file is encrypted; any other extension will tell @pwss@ to treat the file as plain text.
 
 For instance:
 
-bc. $ pwss -f a.yaml.enc init 
+bc. $ pwss init -f a.yaml.enc
 
-will store the password in the *encrypted* file @a.yaml.enc@.
+will initialize an encrypted safe @a.yaml.enc@.
 
 By contrast,
 
-bc. $ pwss -f a.yaml get entry
+bc. $ pwss init -f a.yaml
 
-will try to retrieve @entry@ from file @a.yaml@; the file is assumed to be in plain text by @pwss@ which will not ask for a master password, nor will try to decrypt it.
+Encrypting sensitive information is a good idea. (Just in case you were looking for a witty statement.)  However, if you use @pwss@ to store non-critical infomation, prefer to edit the password safe with a text editor, or use another application for managing encryption and decryption, using @pwss@ with the file in plain format might be more convenient.
 
-Encrypting important passwords is a good idea. (Just in case you were looking for a witty statement.)  However, if you use @pwss@ to store non-critical infomation, prefer to edit the password safe with a text editor, or use another application for managing encryption and decryption, using @pwss@ with the file in plain format might be more convenient.
-
-*Moving from plain to encrypted.* Use the @encrypt@ and @decrypt@ commands at any time to move from the plain to the encrypted format.
+*Moving from plain to encrypted.* You can use the @encrypt@ and @decrypt@ commands at any time to move from the plain to the encrypted format.
 
 bc. $ pwss -f YOURFILE encrypt 
 
-will encrypt @YOURFILE@ while @decrypt@ will perform the opposite operation.
+will encrypt @YOURFILE@, while @decrypt@ will perform the opposite operation.
 
 *Starting from an Existing File.*  You can also start from an existing file, as long as it is an array of YAML records, each containing, at least, a @title@ and a @password@ field.  (See next section, for the file structure.)
 
@@ -136,7 +163,11 @@ Notice that only @title@ and @password@ are required.
 
 h2. Changelog
 
-* *Release 0.2.0*
+* *Release 0.3.0*
+** internal refactoring: CLI parsing is now based on "Slop":https://github.com/leejarvis/slop.  The documentation has been revised and should now be simpler to understand.
+** added some controls to avoid overwriting existing files (in particular: init, encrypt, and decrypt).  The command is now less Unix-like, but I hope you will appreciate a bit more safety.
+
+* *Release 0.2.0* (never really made it to the public -- use version 0.3.0)
 ** it is now possible to add entries of various types (= with different fields).  The supported types include: CreditCard, BankAccount, SoftwareLicense.  Use the -e (--entry) option to specify the type of entry to add
 ** an empty string can now be used to exit (instead of -1) when multiple matches are found
 
@@ -146,14 +177,15 @@ h2. Changelog
 ** most commands make the password of the selected entry available in the clipboard (useful, for instance, if you automatically generate a password)
 ** a destroy command allows one to delete an entry from a safe.  Similar to get, all entries matching a query are shown.  The user is then asked to select which entry has to be deleted or stop.  User confirmation is required even in case of a single match.
 
-h2. License and Additional Disclaimer
+h2. License
 
 Licensed under the terms of the MIT License.
 
+
 h2. Contributing
 
-1. Fork it ( http://github.com/<my-github-username>/pwss/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
+1. Fork it (http://github.com/<my-github-username>/pwss/fork )
+2. Create your feature branch (@git checkout -b my-new-feature@)
+3. Commit your changes (@git commit -am 'Add some feature'@)
+4. Push to the branch (@git push origin my-new-feature@)
 5. Create new Pull Request
