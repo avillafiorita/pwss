@@ -199,7 +199,7 @@ opts = Slop.parse :help => true do
     run do |opts, args|
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
       waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
-      length   = opts.to_hash[:length]   || 0
+      length   = opts.to_hash[:generate] || 0
       type     = opts.to_hash[:type]     || "Entry"
       alnum    = opts.to_hash[:alnum]
 
@@ -247,7 +247,7 @@ opts = Slop.parse :help => true do
     run do |opts, args|
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
       waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
-      length   = opts.to_hash[:length]   || 0
+      length   = opts.to_hash[:generate] || 0
       alnum    = opts.to_hash[:alnum]
       field    = opts.to_hash[:field]
 
