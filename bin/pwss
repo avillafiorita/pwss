@@ -94,7 +94,7 @@ opts = Slop.parse :help => true do
   # the default number of seconds password is available in the clipboard
   DEFAULT_SECS = 30
 
-  banner "pwss [-h|-v]\npwss <command> [options] [args]"
+  banner "pwss [-h|-v]\npwss command [options] [args]"
 
   ##############################################################################
   on "-v", "--version", 'Print version information' do
