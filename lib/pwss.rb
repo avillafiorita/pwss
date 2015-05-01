@@ -7,8 +7,11 @@ require 'yaml'
 
 module Pwss
 
-  def self.get search_string, entries
-    id = choose_entry search_string, entries
+  # entry_no is the relative id of an entry, specified by the user from the command line
+  # (useful when the search criteria returns more than one match, in an order which is known
+  # to the user)
+  def self.get search_string, entries, entry_no = nil
+    id = choose_entry search_string, entries, false, entry_no
 
     entries[id]["password"]
   end
@@ -60,7 +63,7 @@ module Pwss
   # Let the user select an entry from data
   # (data is a YAML string with an array of entries)
   #
-  def self.choose_entry search_string, entries, confirm_even_if_one = false
+  def self.choose_entry search_string, entries, confirm_even_if_one = false, entry_no = nil
     # here we have a nuisance: we want the user to choose one entry
     # by relative id (e.g. the third found), but we need to return
     # the absolute id (to update the right entry in the safe)
@@ -68,14 +71,11 @@ module Pwss
     # ... so we just keep track of the real ids with an array
     #     the relative id is the index in the array
 
-    index = 0
     found = Array.new
-    entries.each do |entry|
+    entries.each_with_index do |entry, index|
       if entry["title"].downcase.include?(search_string.downcase)
-        print_entry found.size, entry
         found << index
       end
-      index += 1
     end
 
     if found.size == 0 then
@@ -83,7 +83,15 @@ module Pwss
       exit -1
     end
 
-    if found.size > 1 or confirm_even_if_one then
+    if entry_no then
+      # accept entry_no even if there is one entry
+      id = entry_no
+    elsif found.size > 1 or confirm_even_if_one then
+      # print the entry or the entries found together with their relative ids
+      found.each_with_index do |absolute_index, relative_index|
+        print_entry relative_index, entries[absolute_index]
+      end
+
       printf "\nVarious matches." if found.size > 1
       printf "\nSelect entry by ID (0..#{found.size-1}); -1 or empty string to exit: "
 
@@ -98,6 +106,7 @@ module Pwss
       end
     else
       id = 0
+      print_entry 0, entries[found[id]]
     end
 
     found[id]

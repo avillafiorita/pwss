@@ -165,20 +165,26 @@ opts = Slop.parse :help => true do
     banner "pwss get [options] string"
     description "Get password for entry matching <string> in the title field"
 
-    on "-f", "--filename=", "Password file to use."
-    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive).", as: Integer
+    on "-f", "--filename=", "Password file to use"
+    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive)", as: Integer
+    on "--stdout", "Output the password to standard output"
+    on "--select=", "Select the N-th matching entry", as: Integer
 
     run  do |opts, args|
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
       waiting = opts.to_hash[:wait] || DEFAULT_SECS
+      stdout_opt = opts.to_hash[:stdout]
+      entry_no = opts.to_hash[:select] || nil
 
       string, _ = file2string filename
       entries = YAML::load(string) || Array.new
 
-      password = Pwss::get args.join(" "), entries
-      if password
-        Cipher.password_to_clipboard password, waiting 
+      password = Pwss::get args.join(" "), entries, entry_no
+
+      if password then
+        stdout_opt ? printf("%s", password) : Cipher.password_to_clipboard(password, waiting)
       end
+
     end
   end
 
@@ -189,12 +195,12 @@ opts = Slop.parse :help => true do
     description "Add an entry and copy its password in the clipboard"
 
     on "-f", "--filename=", "Password file to use."
-    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive).", as: Integer
+    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive)", as: Integer
       
-    on "-e", "--entry=", "Create an entry of type TYPE (Entry, CreditCard, BankAccount, SoftwareLicense).\n                        Default to 'Entry', which is good enough for websites credentials."
+    on "-e", "--entry=", "Create an entry of type TYPE (Entry, CreditCard, BankAccount, SoftwareLicense).\n                        Default to 'Entry', which is good enough for websites credentials"
 
     on "-g", "--generate=", "Generate a random password of given length.", as: Integer
-    on "-a", "--alnum", "Use only alphanumeric chars for the randomly generated password."
+    on "-a", "--alnum", "Use only alphanumeric chars for the randomly generated password"
 
     run do |opts, args|
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME

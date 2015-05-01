@@ -2,7 +2,7 @@ h1. Pwss
 
 A password manager in the spirit of "pws":https://github.com/janlelis/pws.
 
-PWSS can store multiple entries in a file and, more important, it allows user to specify various types of entries (e.g., BankAccount) and different infos for each entry (e.g., URL for Internet passwords).
+PWSS can store multiple entries in a file and it allows user to specify various types of entries (e.g., BankAccount) and different infos for each entry (e.g., URL for Internet passwords).
 
 Features:
 
@@ -62,9 +62,9 @@ A typical usage scenario is the following:
 
 *Using multiple safes.* If you want to create multiple password files or store a password file in a non-standard location, use the @-f@ (@--filename@) option:
 
-# @pwss -f MYFILE init@
-# @pwss -f MYFILE add@
-# @pwss -f MYFILE get@
+# @pwss init -f MYFILE@
+# @pwss add -f MYFILE@
+# @pwss get -f MYFILE@
 
 *Do not forget to use the extension @.enc@, if your password file to be encrypted.* (See "Encrypted and Plain files", below.)
 
@@ -72,7 +72,7 @@ A typical usage scenario is the following:
 
 bc. $ pwss get my_email -w 3
 
-will retrieve entry whose title is @my_email@ and make the password available in the clipboard for @2@ seconds.
+will retrieve entry whose title is @my_email@ and make the password available in the clipboard for @3@ seconds.
 
 Use @0@ to keep the password in the clipboard till a key is pressed.
 
@@ -162,6 +162,10 @@ Example
 Notice that only @title@ and @password@ are required.
 
 h2. Changelog
+
+* *Release 0.4.0*
+** New @--stdout@ option will output password to standard output (useful for integration with other applications)
+** New @--select N@ option will automatically select the @N@th entry (rather than asking the user to select an entry).
 
 * *Release 0.3.0*
 ** internal refactoring: CLI parsing is now based on "Slop":https://github.com/leejarvis/slop.  The documentation has been revised and should now be simpler to understand.
