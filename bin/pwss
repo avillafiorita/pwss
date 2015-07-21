@@ -88,6 +88,7 @@ EOS
 #
 # Main App Starts Here!
 #
+cmd = nil
 opts = Slop.parse :help => true do
   # the default filename
   DEFAULT_FILENAME = File.join(Dir.home, ".pwss.yaml.enc")
@@ -98,15 +99,17 @@ opts = Slop.parse :help => true do
 
   ##############################################################################
   on "-v", "--version", 'Print version information' do
+    cmd = "version"
     puts "pwss version #{version}"
   end
 
   ##############################################################################
-  command :help do
-    banner "pwss help"
+  command :man do
+    banner "pwss man"
     description "Print detailed information about how to use pwss"
 
     run do |_, _|
+      cmd = "man"
       puts man
     end
   end
@@ -119,6 +122,7 @@ opts = Slop.parse :help => true do
     on "-f", "--filename=", "Password file to create. Use extension '.enc' to encrypt it."
 
     run do |opts, args|
+      cmd = "init"
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
 
       if File.exists?(filename)
@@ -151,6 +155,8 @@ opts = Slop.parse :help => true do
     on "-f", "--filename=", "Password file to use."
 
     run do |opts, args|
+      cmd = "list"
+
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
 
       string, _ = file2string filename
@@ -171,6 +177,8 @@ opts = Slop.parse :help => true do
     on "--select=", "Select the N-th matching entry", as: Integer
 
     run  do |opts, args|
+      cmd = "get"
+
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
       waiting = opts.to_hash[:wait] || DEFAULT_SECS
       stdout_opt = opts.to_hash[:stdout]
@@ -203,6 +211,8 @@ opts = Slop.parse :help => true do
     on "-a", "--alnum", "Use only alphanumeric chars for the randomly generated password"
 
     run do |opts, args|
+      cmd = "add"
+
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
       waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
       length   = opts.to_hash[:generate] || 0
@@ -251,6 +261,8 @@ opts = Slop.parse :help => true do
     on '--field=', 'Field to update (if not specified, update the password field).'
 
     run do |opts, args|
+      cmd = "update"
+
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
       waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
       length   = opts.to_hash[:generate] || 0
@@ -300,6 +312,8 @@ opts = Slop.parse :help => true do
     on "-f", "--filename=", "Password file to create. Use extension '.enc' to encrypt it."
 
     run do |opts, args|
+      cmd = "destroy"
+      
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
 
       string, password = file2string filename
@@ -333,6 +347,8 @@ opts = Slop.parse :help => true do
     on "-f", "--filename=", "Password file to encrypt. Write to <file>.enc."
 
     run do |opts, _|
+      cmd = "encrypt"
+      
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME.sub(/\.enc$/, "")
 
       if not File.exists?(filename)
@@ -364,6 +380,8 @@ opts = Slop.parse :help => true do
     on "-f", "--filename=", "Password file to decrypt.  Write to <file>, without '.enc'."
 
     run do |opts, _|
+      cmd = "decrypt"
+
       filename = opts.to_hash[:filename] || DEFAULT_FILENAME
 
       if not File.exists?(filename)
@@ -387,4 +405,8 @@ opts = Slop.parse :help => true do
     end
   end
 
+end
+
+if cmd == nil then
+  puts opts
 end
