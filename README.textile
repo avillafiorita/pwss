@@ -2,34 +2,19 @@ h1. Pwss
 
 A password manager in the spirit of "pws":https://github.com/janlelis/pws.
 
-PWSS can store multiple entries in a file and it allows user to specify various types of entries (e.g., BankAccount) and different infos for each entry (e.g., URL for Internet passwords).
-
 Features:
 
-* PWSS manages password files.  A password file store passwords and other
-  sensitive information
-
-* Entries in a password file can be of the following pre-defined types:
-  Entry, CreditCard, BankAccount, SoftwareLicense
-
-* Information stored for each type:
-
-  - Entry:           title, username, password, url, description
-  - CreditCard:      title, issuer, name_on_card, card_number, valid_from, 
-                     valid_till, verification_number, pin, url, notes
-  - BankAccount:     title, name, iban, url, description
-  - SoftwareLicense: title, version, license_number, licensed_to,
-                     email, purchased_on
-
-* CRUD (create, read, update, delete) commands are available to
-  operate on entries and password files
-
-* The user can manage different password files (e.g., work, personal)
+* PWSS manages password *files*:
+** A password file can store different entries (password and other sensitive information)
+** The user can manage different password files (e.g., work, personal)
+* Entries in a password file can be any of Entry, CreditCard, BankAccount, SoftwareLicense.  Each type stores a different set of infos:
+** *Entry:* title, username, password, url, description
+** *CreditCard:* title, issuer, name_on_card, card_number, valid_from, valid_till, verification_number, pin, url, notes
+** *BankAccount:* title, name, iban, url, description
+** *SoftwareLicense: title, version, license_number, licensed_to, email, purchased_on
 * Password files can be encrypted
-* Encrypted password files can be decrypted, for instance, to batch process
-  entries, to migrate to another tool, or to manually edit entries
-* Entries are human-readable (and editable), when the password file is not
-  encrypted
+* Encrypted password files can be decrypted, for instance, to batch process entries, to migrate to another tool, or to manually edit entries
+* Entries are human-readable (and editable), when the password file is not encrypted
 
 h2. Installation
 
@@ -42,12 +27,12 @@ h2. Quick Start
 Try the following:
 
 bc. $ pwss init
-$ pwss add
-$ pwss get <title you gave with previous command>
+$ pwss add First Entry
+$ pwss get First
 
 For some more information:
 
-bc. $ pwss help # get information from the command line
+bc. $ pwss man # get information from the command line
 $ pwss -h   # command syntax
 
 h2. Detailed Instructions
@@ -56,9 +41,9 @@ h2. Detailed Instructions
 
 A typical usage scenario is the following:
 
-# @pwss init@ will create a new encrypted password safe in @~/.pwss.yaml.enc@
+# @pwss init@ will create a new encrypted password safe in @~/.pwss.yaml.enc@. If you specify a filename without the @.enc@ extension, the password safe will be stored in plain text (see below).
 # @pwss add@ will add a new entry to the file
-# @pwss get string@ will retrieve all entries whose *title* contains @string@ and make the password of the chosen entry available in the clipboard for a given period (the default is 30 seconds; the option @-w@ controls the amount of time the password is available)
+# @pwss get string@ will retrieve all entries whose *title* contains @string@, let the user choose an entry, and make the password of the chosen entry available in the clipboard for a given period (the default is 30 seconds; the option @-w@ controls the amount of time the password is available)
 
 *Using multiple safes.* If you want to create multiple password files or store a password file in a non-standard location, use the @-f@ (@--filename@) option:
 
@@ -68,17 +53,17 @@ A typical usage scenario is the following:
 
 *Do not forget to use the extension @.enc@, if your password file to be encrypted.* (See "Encrypted and Plain files", below.)
 
-*Controlling how long passwords are made available* Use the @-w@ option to determine how long the password is made available in the clipboard.  For instance:
+*Controlling how long passwords are made available for* Use the @-w@ option to determine how long the password is made available in the clipboard.  For instance:
 
 bc. $ pwss get my_email -w 3
 
-will retrieve entry whose title is @my_email@ and make the password available in the clipboard for @3@ seconds.
+will retrieve a user selected entry whose title is @my_email@ and make the password available in the clipboard for @3@ seconds.
 
 Use @0@ to keep the password in the clipboard till a key is pressed.
 
 *Automatically Generated Password* pwss can automatically generate passwords for entries which are added or updated.
 
-The generated passwords are random sequences of chars and symbols and no attempt is made to make them readable or simpler to remember.  You can use the @-a@ option to limit the generator to use only digits and letters ([0-9a-zA-Z]): this is useful, for instance, if the website you're generating the password for does not accept certain classes of characters.
+The generated passwords are random sequences of chars and symbols.  No attempt is made to make them readable or simpler to remember.  You can use the @-a@ option to limit the generator to use only digits and letters ([0-9a-zA-Z]): this is useful, for instance, for websites which do accept certain classes of characters.
 
 Use the @-g LENGTH@ option to determine the password length.
 
@@ -102,7 +87,7 @@ By contrast,
 
 bc. $ pwss init -f a.yaml
 
-Encrypting sensitive information is a good idea. (Just in case you were looking for a witty statement.)  However, if you use @pwss@ to store non-critical infomation, prefer to edit the password safe with a text editor, or use another application for managing encryption and decryption, using @pwss@ with the file in plain format might be more convenient.
+Encrypting sensitive information is a good idea. (Just in case you were expecting a witty statement.)  However, if you use @pwss@ to store non-critical infomation, prefer to edit the password safe with a text editor, or use another application for managing encryption and decryption, using @pwss@ with the file in plain format might be more convenient.
 
 *Moving from plain to encrypted.* You can use the @encrypt@ and @decrypt@ commands at any time to move from the plain to the encrypted format.
 
@@ -162,6 +147,15 @@ Example
 Notice that only @title@ and @password@ are required.
 
 h2. Changelog
+
+* *Release 0.5.0* This is mainly a release focused on improving interaction. Small changes to the command syntax and improved exit conditions. In details:
+** *add* now accepts the title in the command line.  For instance @pwss add New Entry@
+** *new* is now an alias for the *add* command
+** *update* now requires to specify the field: use @-p@, @--password@, or @--field password@, if you want to update the password
+** show the usage summary, if no arguments are given 
+** *C-c* is now trapped and properly managed (clearing the clipboard)
+** decryption errors are now properly managed
+** the content of the clipboard is now restored after the waiting period
 
 * *Release 0.4.0*
 ** New @--stdout@ option will output password to standard output (useful for integration with other applications)

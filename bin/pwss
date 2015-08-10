@@ -24,6 +24,47 @@ def file2string filename
   [string, password]
 end
 
+# this is to support command aliases: add and new
+# maybe not the the best of places where to define a function
+def add opts, args
+  filename = opts.to_hash[:filename] || DEFAULT_FILENAME
+  waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
+  length   = opts.to_hash[:generate] || 0
+  type     = opts.to_hash[:type]     || "Entry"
+  alnum    = opts.to_hash[:alnum]
+
+  default_title = args.join(" ")
+  string, password = file2string filename
+
+  puts "Adding #{default_title != "" ? "entry '" + default_title + "'" : "an entry"} of type '#{type}' to #{filename}"
+  # ask for a new entry
+  if default_title != "" then
+    overrides = {"title" => ["Readline.readline('title (leave empty for \"#{default_title}\"): ')", "'#{default_title}'"]}
+  end
+  pe = eval("Pwss::" + type).new
+  pe.ask length, alnum, overrides
+
+  # add the entry to the safe
+  entries = YAML::load(string) || Array.new
+  entries << pe.entry
+
+  # check status of input file and encrypt if necessary
+  if FileOps::encrypted? filename then
+    new_string = Cipher::encrypt entries.to_yaml, password
+  else
+    new_string = entries.to_yaml
+  end
+
+  FileOps::backup filename
+  FileOps::save filename, new_string
+
+  puts "Entry added."
+  
+  # make password available in the clipboard, if there is a password to make available
+  if pe.entry["password"] 
+    Cipher.password_to_clipboard pe.entry["password"], waiting
+  end
+end
 
 version = Pwss::VERSION
 man = <<EOS
@@ -39,13 +80,13 @@ DESCRIPTION
 
   Features:
 
-  * PWSS manages password files.  A password file store passwords and other
-    sensitive information
+  * PWSS manages password *files*:
+    - A password file can store different entries (password and other
+      sensitive information)
+    - The user can manage different password files (e.g., work, personal)
 
-  * Entries in a password file can be of the following pre-defined types:
-    Entry, CreditCard, BankAccount, SoftwareLicense
-
-  * Information stored for each type:
+  * Entries in a password file can be any of Entry, CreditCard, BankAccount, 
+    SoftwareLicense.  Each type stores a different set of infos:
 
     - Entry:           title, username, password, url, description
     - CreditCard:      title, issuer, name_on_card, card_number, valid_from, 
@@ -54,13 +95,11 @@ DESCRIPTION
     - SoftwareLicense: title, version, license_number, licensed_to,
                        email, purchased_on
 
-  * CRUD (create, read, update, delete) commands are available to
-    operate on entries and password files
-
-  * The user can manage different password files (e.g., work, personal)
   * Password files can be encrypted
+
   * Encrypted password files can be decrypted, for instance, to batch process
     entries, to migrate to another tool, or to manually edit entries
+
   * Entries are human-readable (and editable), when the password file is not
     encrypted
 
@@ -69,7 +108,7 @@ EXAMPLES
 
   # scenario
   pwss init -f a.enc                    # generate an encrypted safe a.enc
-  pwss add -f a.enc -g 16 -a            # add an entry (generating a password)
+  pwss add -f a.enc -g 16 -a            # add an entry (pwss will generate a random 16-char password)
   pwss get -f a.enc my secret account   # find an entry
 
 VERSION
@@ -80,6 +119,7 @@ LICENSE
 
 SEE ALSO
   pwss -h
+  pwss man
   https://github.com/avillafiorita/pwss
 EOS
 
@@ -89,7 +129,7 @@ EOS
 # Main App Starts Here!
 #
 cmd = nil
-opts = Slop.parse :help => true do
+opts = Slop.parse :help => true, :strict => true do
   # the default filename
   DEFAULT_FILENAME = File.join(Dir.home, ".pwss.yaml.enc")
   # the default number of seconds password is available in the clipboard
@@ -199,12 +239,12 @@ opts = Slop.parse :help => true do
 
   ##############################################################################
   command :add do
-    banner "pwss add [options]"
+    banner "pwss add [options] [entry title]"
     description "Add an entry and copy its password in the clipboard"
 
-    on "-f", "--filename=", "Password file to use."
+    on "-f", "--filename=", "Password file to use"
     on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive)", as: Integer
-      
+    
     on "-e", "--entry=", "Create an entry of type TYPE (Entry, CreditCard, BankAccount, SoftwareLicense).\n                        Default to 'Entry', which is good enough for websites credentials"
 
     on "-g", "--generate=", "Generate a random password of given length.", as: Integer
@@ -212,40 +252,25 @@ opts = Slop.parse :help => true do
 
     run do |opts, args|
       cmd = "add"
+      add opts, args
+    end
+  end
 
-      filename = opts.to_hash[:filename] || DEFAULT_FILENAME
-      waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
-      length   = opts.to_hash[:generate] || 0
-      type     = opts.to_hash[:type]     || "Entry"
-      alnum    = opts.to_hash[:alnum]
+  command :new do
+    banner "pwss new [options] [entry title]"
+    description "An alias for add"
 
-      string, password = file2string filename
+    on "-f", "--filename=", "Password file to use"
+    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive)", as: Integer
+    
+    on "-e", "--entry=", "Create an entry of type TYPE (Entry, CreditCard, BankAccount, SoftwareLicense).\n                        Default to 'Entry', which is good enough for websites credentials"
 
-      puts "Adding an entry of type: #{type}"
-      # ask for a new entry
-      pe = eval("Pwss::" + type).new
-      pe.ask length, alnum
+    on "-g", "--generate=", "Generate a random password of given length.", as: Integer
+    on "-a", "--alnum", "Use only alphanumeric chars for the randomly generated password"
 
-      # add the entry to the safe
-      entries = YAML::load(string) || Array.new
-      entries << pe.entry
-
-      # check status of input file and encrypt if necessary
-      if FileOps::encrypted? filename then
-        new_string = Cipher::encrypt entries.to_yaml, password
-      else
-        new_string = entries.to_yaml
-      end
-
-      FileOps::backup filename
-      FileOps::save filename, new_string
-
-      puts "Entry added."
-      
-      # make password available in the clipboard, if there is a password to make available
-      if pe.entry["password"] 
-        Cipher.password_to_clipboard pe.entry["password"], waiting
-      end
+    run do |opts, args|
+      cmd = "new"
+      add opts, args
     end
   end
 
@@ -254,11 +279,12 @@ opts = Slop.parse :help => true do
     banner "pwss update [options] string"
     description "Update given field of user-selected entry matching <string>"
 
-    on "-f", "--filename=", "Password file to use."
-    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive).", as: Integer
-    on "-g", "--generate=", "Generate a random password of given length.", as: Integer
-    on "-a", "--alnum", "Use only alphanumeric chars for the randomly generated password."
-    on '--field=', 'Field to update (if not specified, update the password field).'
+    on "-f", "--filename=", "Password file to use"
+    on "-w", "--wait=", "Seconds password is available in the clipboard (0 = interactive)", as: Integer
+    on "-g", "--generate=", "Generate a random password of given length", as: Integer
+    on "-a", "--alnum", "Use only alphanumeric chars for the randomly generated password"
+    on "--field=", 'Field to update'
+    on "-p", "--password", "an alias for --field password"
 
     run do |opts, args|
       cmd = "update"
@@ -267,18 +293,23 @@ opts = Slop.parse :help => true do
       waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
       length   = opts.to_hash[:generate] || 0
       alnum    = opts.to_hash[:alnum]
-      field    = opts.to_hash[:field]
+      field    = opts.to_hash[:password] ? "password" : opts.to_hash[:field]
+
+      if not field then
+        puts "Please specify a field to update (used --field ... or -p)"
+        exit 1
+      end
 
       string, password = file2string filename
 
       # load entries and update 
       entries = YAML::load(string) || Array.new
 
-      if field then
-        entries, entry_password = Pwss::update_field args.join(" "), entries, field
-      else
+      if field == "password" then
         # update password
         entries, entry_password = Pwss::update args.join(" "), entries, length, alnum
+      else
+        entries, entry_password = Pwss::update_field args.join(" "), entries, field
       end
 
       # check status of input file and encrypt if necessary
@@ -398,7 +429,7 @@ opts = Slop.parse :help => true do
         FileOps::backup dec_filename
         puts "Warning: existing #{dec_filename} backupped to #{dec_filename}~"
       end
-            
+      
       FileOps::save dec_filename, decrypted
       puts "A decrypted copy now lives in #{dec_filename}"
       puts "You might want to check everything is ok and delete #{filename}, if you wish."

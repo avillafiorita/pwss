@@ -10,7 +10,12 @@ module Cipher
   end
 
   def self.decrypt string, password
-    Encryptor.decrypt(:value => string, :key => password)
+    begin
+      Encryptor.decrypt(:value => string, :key => password)
+    rescue Exception => e
+      puts "Unable to decrypt. Exiting"
+      exit 1
+    end
   end
 
   # Ask for a password fom the command line
@@ -47,17 +52,23 @@ module Cipher
   # make the password available to the clipboard.
   #
   def self.password_to_clipboard password, counter = 30
+    old_clipboard = `pbpaste`
     system("printf \"%s\" \"#{password}\" | pbcopy")
 
-    if counter <= 0
-      puts "\nPassword available in clipboard: press enter when you are done."
-      STDIN.getc
-    else
-      puts "\nPassword available in clipboard for #{counter} seconds."
-      sleep(counter)
+    begin
+      if counter <= 0
+        STDIN.flush
+        puts "\nPassword available in clipboard: press enter when you are done."
+        STDIN.getc
+      else
+        puts "\nPassword available in clipboard for #{counter} seconds."
+        sleep(counter)
+      end
+      system("printf \"#{old_clipboard}\" | pbcopy")
+    rescue Exception => e
+      system("printf \"#{old_clipboard}\" | pbcopy")
+      puts "Clipboard restored. Exiting."
     end
-
-    system("echo ahahahahaha | pbcopy")
   end
 
   private

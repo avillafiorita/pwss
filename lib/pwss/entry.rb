@@ -17,7 +17,7 @@ module Pwss
       @entry = Hash.new
 
       # the fields of an entry, together with:
-      # - the function to ask the 
+      # - the function to ask the value 
       # - the default value
       @fields = {
         "title"       => ["Readline.readline('title: ')", "'title'"],
@@ -32,9 +32,15 @@ module Pwss
 
     # interactively ask from command line all fields specified in FIELDS
     # arguments length and alnum are for password generation
-    def ask length = 8, alnum = true
+    def ask length = 8, alnum = true, overrides = {}
+      @fields.merge! overrides
       @fields.keys.each do |key|
-        @entry[key] = (eval @fields[key][INPUT_F]) || (eval @fields[key][DEFAULT])
+        value = eval @fields[key][INPUT_F]
+        if value == nil or value == "" then
+          @entry[key] = eval @fields[key][DEFAULT]
+        else
+          @entry[key] = value
+        end
       end
     end
     

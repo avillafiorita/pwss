@@ -16,7 +16,7 @@ module FileOps
     file = File.open(filename, "wb")
     file.write data
     file.close
-    puts "Password safe #{filename} updated."
+    # puts "Password safe #{filename} updated."
   end
 
   # check if the extension is ".enc"
