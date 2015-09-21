@@ -148,7 +148,8 @@ Notice that only @title@ and @password@ are required.
 
 h2. Changelog
 
-* *Release 0.5.0* This is mainly a release focused on improving interaction. Small changes to the command syntax and improved exit conditions. In details:
+* *Release 0.5.1* fixes a bug of the "add" command, which threw an error if the title was not supplied on the command line.  When adding an entry, now it is possible to specify the title on the command line or just wait for the title prompt
+* *Release 0.5.0* This is a release mainly focused on improving interaction. It includes small changes to the command syntax and improved exit conditions. In details:
 ** *add* now accepts the title in the command line.  For instance @pwss add New Entry@
 ** *new* is now an alias for the *add* command
 ** *update* now requires to specify the field: use @-p@, @--password@, or @--field password@, if you want to update the password

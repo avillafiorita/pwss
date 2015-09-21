@@ -24,8 +24,8 @@ def file2string filename
   [string, password]
 end
 
-# this is to support command aliases: add and new
-# maybe not the the best of places where to define a function
+# add and new are command aliases.  Unfortunately slop does not seem to support aliases.
+# hence this function, which is called by both commands.
 def add opts, args
   filename = opts.to_hash[:filename] || DEFAULT_FILENAME
   waiting  = opts.to_hash[:wait]     || DEFAULT_SECS
@@ -40,6 +40,8 @@ def add opts, args
   # ask for a new entry
   if default_title != "" then
     overrides = {"title" => ["Readline.readline('title (leave empty for \"#{default_title}\"): ')", "'#{default_title}'"]}
+  else
+    overrides = Hash.new
   end
   pe = eval("Pwss::" + type).new
   pe.ask length, alnum, overrides

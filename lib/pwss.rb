@@ -98,8 +98,7 @@ module Pwss
       response = Readline.readline
       id = response == "" ? -1 : response.to_i
       while (id < -1 or id >= found.size)
-        printf "Select entry by ID (0..#{found.size-1}); -1 or empty string to exit: "
-        response = Readline.readline
+        response = Readline.readline "Select entry by ID (0..#{found.size-1}); -1 or empty string to exit: "
         id = response == "" ? -1 : response.to_i
       end
       if id == -1 then
