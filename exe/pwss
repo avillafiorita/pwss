@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require 'pwss'
+
+# read-eval-print-step passing all commands and the argument
+Pwss::CommandSemantics.reps Pwss::CommandSyntax.commands, ARGV
