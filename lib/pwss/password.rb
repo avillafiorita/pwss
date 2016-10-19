@@ -13,14 +13,12 @@ module Pwss
     #
     #
     def self.password arguments = {}
-      strategy = arguments[:strategy] || 'random'
       length = arguments[:length] || DEFAULT_PASSWORD_LENGTH
+      strategy = arguments[:strategy] || 'random'
 
       case strategy
-      when 'random'
-        return Pwss::Password.random_password(length, false)
-      when 'alpha'
-        return Pwss::Password.random_password(length, true)
+      when 'random', 'strong', 'alpha'
+        return Pwss::Password.random_password(length, strategy)
       when 'ask'
         return Pwss::Password.ask_password_twice "new password for entry"
       when 'pwgen'
@@ -28,10 +26,10 @@ module Pwss
           password = %x(pwgen -N1 #{length}).chomp
           return password
         rescue
-          raise "Error: pwgen not found.  Use one of random, alpha, or ask."
+          raise "Error: pwgen not found.  Use one of random, strong, alpha, or ask."
         end
       else
-        raise "Error: strategy not understood.  Use one of random, alpha, pwgen, or ask"
+        raise "Error: password generation strategy #{strategy} not understood."
       end
     end
 
@@ -62,10 +60,26 @@ module Pwss
 
     # Generate a random password
     # (Adapted from: http://randompasswordsgenerator.net/tutorials/ruby-random-password-generator.html)
-    def self.random_password length=DEFAULT_PASSWORD_LENGTH, alnum=false
-      chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ1234567890'  
-      chars += '!@#$%^&*()_+=[]{}<>/~,.;:|' if not alnum
-      Array.new(length) { chars[rand(chars.length)].chr }.join  
+    def self.random_password length=DEFAULT_PASSWORD_LENGTH, strategy="random"
+      lower = 'abcdefghijkmnpqrstuvwxyz'
+      upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+      digits = '123456789'
+      ambiguous = '0oOlI' 
+      safe_symbols = '~!@#$%^-+_.,;:'
+      difficult_symbols = '&*()={}[]|\\\"\'`<>?/'
+
+      case strategy
+      when 'random'
+        chars = lower + upper + digits + safe_symbols + difficult_symbols + ambiguous
+      when 'strong'
+        chars = lower + upper + digits + safe_symbols
+      when 'alpha'
+        chars = lower + upper + digits
+      else
+        raise "Error: password generation strategy #{strategy} is not understood."
+      end        
+
+      Array.new(length) { chars[rand(chars.length)].chr }.join
     end
 
     #

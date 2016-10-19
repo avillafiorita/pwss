@@ -1,5 +1,4 @@
 require 'slop'
-require 'pwss/password'
 
 module Pwss
   module CommandSyntax
@@ -48,7 +47,7 @@ module Pwss
 
       opts.string "-f", "--filename", "Password file to use"
       opts.bool "--stdout", "Output the password to standard output"
-      opts.bool "-h", "--hide", "Hide sensitive fields"
+      opts.bool "-s", "--show", "Show sensitive fields"
       opts.integer "-w", "--wait", "Number of seconds the field is available in the clipboard (0 = wait for user input)", default: DEFAULT_WAIT
       opts.string "--field", "Field to make available on stdout or clipboard (password by default)"
       return { :get => [opts, :get] }
@@ -58,11 +57,11 @@ module Pwss
       opts = Slop::Options.new
       opts.banner = "add|new [options] [entry title] -- add an entry and copy its password in the clipboard"
       opts.string "-f", "--filename", "Password file to use"
-      opts.integer "-w", "--wait", "Seconds password is available in the clipboard (0 = interactive)", default: DEFAULT_WAIT
+      opts.integer "-w", "--wait", "Time (in seconds) password is available in the clipboard (0 = interactive)", default: DEFAULT_WAIT
       opts.string "-t", "--type", "Create an entry of type TYPE (Entry, CreditCard, BankAccount, SoftwareLicense, Sim).\n                        Default to 'Entry', which is good enough for websites credentials"
-      opts.string "-m", "--method", "Method to generate the password (one of: random, alpha, ask; default to random)"
+      opts.string "-m", "--method", "Method to generate the password. One of: random (default), strong, alpha, ask"
       opts.bool "--ask", "A shortcut for --method ask"
-      opts.integer "-l", "--length", "Password length (when random or alpha; default #{DEFAULT_LENGTH})", default: DEFAULT_LENGTH
+      opts.integer "-l", "--length", "Password length.  Used if the method is not 'ask'; default to #{DEFAULT_LENGTH})", default: DEFAULT_LENGTH
       return { :add => [opts, :add_entry],
                :new => [opts, :add_entry] }
     end

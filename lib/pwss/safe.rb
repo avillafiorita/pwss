@@ -154,7 +154,6 @@ module Pwss
 
       if even_if_one or entries.size > 1
         entries.size > 1 ? puts("pwss matches:") : puts("pwss match:")
-        # pruned = entries.map { |x| Pwss::Safe.prune_entry x, ["password", "pin", "verification_number"] }
         entries.each_with_index do |e, i|
           puts  Pwss::Safe.entry_to_s ids[i], e
         end
@@ -166,7 +165,6 @@ module Pwss
         end
       else
         puts "pwss has one match:"
-        # pruned = Pwss::Safe.prune_entry entries[0], ["password", "pin", "verification_number"]
         puts Pwss::Safe.entry_to_s ids[0], entries[0]
         id = ids[0]
       end

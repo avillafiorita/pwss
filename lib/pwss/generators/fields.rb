@@ -10,14 +10,15 @@ module Pwss
     HIDDEN = 2
 
     # this is a set of fields useful for different types of entries
-    # each entry will reference the symbols it needs to make sense
+    # see the constants above to make sense of the fields for each entry
+    # different types of entries will use the appropriate set of fields
     FIELDS = {
       # everyone has...
       "title"       => ["Readline.readline('title: ')", "''", false],
       "url"         => ["Readline.readline('url: ')", "''", false],
       "username"    => ["Readline.readline('username: ')", "''", false],
       "recovery_email" => ["Readline.readline('email: ')", "''", false],
-      "password"    => ["Pwss::Password.password(arguments)", "Pwss::Password.password", true],
+      "password"    => ["Pwss::Password.password(arguments)", "Pwss::Password.ask_password_twice('password')", true],
       "description" => ["get_lines", "''", false],
 
       # banks also have ...
@@ -70,12 +71,11 @@ module Pwss
 
       # ... otherwise, do some work and ask for the value!
       input_f = FIELDS[key] ? FIELDS[key][INPUT_F] : "Readline.readline('#{key}: ')"
-      default = FIELDS[key] ? FIELDS[key][DEFAULT] : nil
       value = eval input_f
       if value != nil and value != "" then
         value
       else
-        default
+        FIELDS[key] ? eval(FIELDS[key][DEFAULT]) : nil
       end
     end
 
@@ -108,8 +108,9 @@ module Pwss
       output
     end
 
+    # custom keys are always considered to be sensitive
     def self.sensitive? field
-      FIELDS[field][HIDDEN]
+      FIELDS[field] ?  FIELDS[field][HIDDEN] : true
     end
 
     def self.sensitive

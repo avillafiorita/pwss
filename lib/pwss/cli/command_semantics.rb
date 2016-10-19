@@ -171,14 +171,14 @@ EOS
       waiting = opts[:wait]
       stdout_opt = opts[:stdout]
       field_name = opts[:field] || "password"
-      hide = opts[:hide]
+
+      show = opts[:show]
       string = argv.join(" ")
-      
       safe = use_safe opts[:filename]
       entries_with_idx = safe.match string
       id = Pwss::Safe.choose_entry entries_with_idx
       if id != -1 then
-        puts (hide ? safe.get_pruned(id).to_yaml : safe.get(id).to_yaml )
+        puts (show ? safe.get(id).to_yaml : safe.get_pruned(id).to_yaml )
         field_value = safe.get_field id, field_name
         if field_value then
           stdout_opt ? printf("%s", field_value) : Pwss::Password.to_clipboard(field_name, field_value, waiting)
@@ -232,6 +232,7 @@ EOS
       if id != -1 then
         field_value = Pwss::Fields.ask field, { strategy: strategy, length: length }
         puts "Updating #{field} field of '#{safe.entries[id]["title"]}' in #{safe.filename}"
+        puts "The old value of #{field} is: #{safe.get_field id, field}"
         safe.update id, field, field_value
         safe.save
         puts "Entry updated"

@@ -330,6 +330,22 @@ will show the man page.
 
 Changelog
 ---------
+-   **Release 0.7.0** is a minor release, which changes the default for sensitive
+    data and improves password generation.
+    - Sensitive data is not shown by default.  If you want to show sensitive
+      data, use the `--show` option.  The `--hide` option (now obsolete) has
+      been removed
+    - When updating a field, the old value of the field is now printed on 
+      standard output.  This simplifies updating passwords when the "old" password
+      has to be specified.  Now you can start by updating the password field with pwss, 
+      paste the new password using the clipboard, and then copy-and-paste the old
+      password which is shown in the standard output.
+    - A new password generation strategy "strong" generates a random password on a subset
+      of all printable characters, ensuring there are neither ambiguous
+      character (i.e., 0, O, l, I), nor symbols which might not be
+      accepted in passwords (e.g., \, ", [, ], <, >).
+    - The strong and random strategies ensure there is at least one
+      symbol and one digit in the password
 
 -   **Release 0.6.0** introduces some major changes to functions, command syntax,
     and code structure.
