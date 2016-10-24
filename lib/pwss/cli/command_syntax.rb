@@ -43,13 +43,14 @@ module Pwss
 
     def self.get_opts
       opts = Slop::Options.new
-      opts.banner = "get [options] -- get a stored field of a record (it defaults to password)"
+      opts.banner = "get [options] arg -- get a field of a record matching arg"
 
       opts.string "-f", "--filename", "Password file to use"
       opts.bool "--stdout", "Output the password to standard output"
       opts.bool "-s", "--show", "Show sensitive fields"
       opts.integer "-w", "--wait", "Number of seconds the field is available in the clipboard (0 = wait for user input)", default: DEFAULT_WAIT
-      opts.string "--field", "Field to make available on stdout or clipboard (password by default)"
+      opts.string "--field", "Field to make available on stdout or clipboard (default to password)"
+      opts.integer "--id", "Get an entry directly by id and ignore any arg"
       return { :get => [opts, :get] }
     end
 
