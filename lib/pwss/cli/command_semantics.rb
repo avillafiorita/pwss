@@ -235,16 +235,17 @@ EOS
       entries_with_idx = safe.match string
       id = Pwss::Safe.choose_entry entries_with_idx, true
       if id != -1 then
-        field_value = Pwss::Fields.ask field, { strategy: strategy, length: length }
+        old_value = safe.get_field id, field
+        new_value = Pwss::Fields.ask field, { strategy: strategy, length: length }
         printf "Updating #{field} field of '#{safe.entries[id]["title"]}' in #{safe.filename} ..."
-        safe.update id, field, field_value
+        safe.update id, field, new_value
         safe.save
         puts "... done"
-        puts "The old value of #{field} is: #{safe.get_field id, field}"
+        puts "The old value of #{field} is: #{old_value}"
         
         # make the field available in the clipboard, just in case it is needed
         if field == "password"
-          Pwss::Password.to_clipboard "password", field_value, waiting
+          Pwss::Password.to_clipboard "password", new_value, waiting
         end
       end
     end
