@@ -183,10 +183,12 @@ EOS
       end
 
       if id != -1 and safe.get(id) then
-        puts (show ? safe.get(id).to_yaml : safe.get_pruned(id).to_yaml )
         field_value = safe.get_field id, field_name
-        if field_value then
-          stdout_opt ? printf("%s", field_value) : Pwss::Password.to_clipboard(field_name, field_value, waiting)
+        if stdout_opt then
+          printf("%s", field_value)
+        else
+          puts (show ? safe.get(id).to_yaml : safe.get_pruned(id).to_yaml )
+          Pwss::Password.to_clipboard(field_name, field_value, waiting)
         end
       end
     end

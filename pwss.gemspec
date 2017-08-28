@@ -35,6 +35,6 @@ Distinguishing features:
 
   spec.add_runtime_dependency 'slop', '~> 4.3.0', '>= 4.3.0'
   spec.add_runtime_dependency 'encryptor', '~> 1.3.0', '~> 1.3.0'     
-  spec.add_runtime_dependency 'clipboard', '~> 1.0.6', '>= 1.0.6'     
+  spec.add_runtime_dependency 'clipboard', '~> 1.1.1', '>= 1.1.1'     
   spec.add_runtime_dependency 'gpgme', '~> 2.0.12', '>= 2.0.12'
 end

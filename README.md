@@ -1,7 +1,8 @@
 Pwss
 ====
 
-A password manager in the spirit of [pws](https://github.com/janlelis/pws) and
+A multi-platform password manager in the spirit of
+[pws](https://github.com/janlelis/pws) and
 [pass](https://www.passwordstore.org/).
 
 Different from pws and pass, PWSS manages password **files**.  Each file can
@@ -23,6 +24,10 @@ so.
 
 Password files can be encrypted and commands allow to operate directly on
 them.
+
+`pwss` has been reported to work on OSX and Linux; it should also work
+on Windows.  **If you are working on Linux, you need to install `xclip`,
+to be able to use the clipboard.**
 
 
 Installation

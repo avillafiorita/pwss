@@ -6,7 +6,7 @@
     - Sensitive data is not shown by default.  If you want to show sensitive
       data, use the `--show` option.  The `--hide` option (now obsolete) has
       been removed
-    - When updating a field, the old value of the field is now printed on 
+    - When updating a field, the old value of the field is now printed to the
       standard output.  This simplifies updating passwords when the "old" password
       has to be specified.  Now you can start by updating the password field with pwss, 
       paste the new password using the clipboard, and then copy-and-paste the old
@@ -19,6 +19,15 @@
       symbol and one digit in the password
     - The '--id' option allows to get an entry by ID.  It can be useful for automating
       operations with pwss or to quickly get an entry, if you remember its ID.
+      Use `pwss get` to get the ID and title of all entries in your password store.
+    - The `--stdout` option has been implemented right.  If you
+      specify `--stdout` only the looked-up field is printed to
+      stdout.  In conjunction with the `--id` option, this allows to
+      use `pwss` in scripts and pipes.  For instance:
+      
+          DB_USER=adolfo
+          DB_PASSWORD=$(pwss get --id 123 --stdout)
+          rails s
 
 -   **Release 0.6.0** introduces some major changes to functions, command syntax,
     and code structure.
